@@ -1,0 +1,31 @@
+{
+  "features": [
+    "creator_allocation_t0",
+    "top5_concentration_wend",
+    "creator_time_to_first_sell_s",
+    "authority_revoked_in_window",
+    "n_early_holders",
+    "insider_funded_early_holders",
+    "freezable",
+    "mintable",
+    "nontransf",
+    "thook"
+  ],
+  "snapshot": "features_c23.csv",
+  "snapshot_sha256": "ff79a6811f29c0f1dd8235a12aa0d39a5340e76bf23c051b524658f8dc6f3c10",
+  "train_n": 87,
+  "test_n": 194,
+  "test_hard_rug": 77,
+  "holdout": "2024 time-split holdout (train <= 2023, test Jan-Nov 2024, n=194), SolRPDS-labelled Solana pools, pre-event 30-minute launch-window state",
+  "clearance_point": {
+    "precision": 0.9844,
+    "recall": 0.5385,
+    "threshold": 0.5963
+  },
+  "misuse_flag_point": {
+    "precision": 0.4643,
+    "recall": 0.5065,
+    "threshold": 0.456
+  },
+  "calibration": "CLEARANCE, not safety: this score answers one question \u2014 will this pool avoid a hard rug (near-total, >=99% liquidity removal)? A cleared pool avoided a hard rug at 0.984 precision, covering 0.538 of honest pools, measured on the 2024 time-split holdout (train <= 2023, test Jan-Nov 2024, n=194), SolRPDS-labelled Solana pools, pre-event 30-minute launch-window state. It does NOT answer whether the pool is safe: the honest-versus-soft/slow-rug boundary is absent from launch-window state (0.574 precision against a 0.500 base rate), so a cleared pool can still dev-dump or bleed out over months. Do not invert this into a rug alarm: used that way the same model measures 0.464 precision \u2014 wrong more often than right. Roughly 98.7% of pump.fun launches are scam-adjacent, so this is a filter for a small honest minority, judged on minority-class precision, never accuracy."
+}

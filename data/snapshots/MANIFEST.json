@@ -1,0 +1,8 @@
+{
+  "features_c23.csv": {
+    "sha256": "ff79a6811f29c0f1dd8235a12aa0d39a5340e76bf23c051b524658f8dc6f3c10",
+    "source": "MLCryptoEngine stage C.23 launch-window feature matrix (data/processed/detection/features_c23.csv), itself derived from immutable SolRPDS snapshots plus Helius launch-window fetches; 281 pools, columns mint/year/cls/decon + 10 launch-window features + 5 creator-history columns (the model uses the 10 only)",
+    "copied": "2026-08-11",
+    "note": "Immutable. solclear/train.py verifies this hash before training; a mismatch is a hard failure."
+  }
+}

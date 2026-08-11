@@ -1,0 +1,17 @@
+# environment / secrets — anything credential-shaped stays out of history
+.env
+*secret*
+*key*
+*token*
+*credential*
+.venv/
+
+# metered-spend ledger (append-only, machine-local; never committed)
+data/vendor/
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

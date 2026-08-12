@@ -15,6 +15,14 @@ from pathlib import Path
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Stage B (2026-08-12) live end-to-end validation cap, registered in
+# progress.md before the first live call. Deliberately far below the project
+# ceiling below: this stage retrieves at most 8 addresses through Method B at
+# the parent project's measured ~33 weighted credits per pool, so 400 leaves
+# roughly 12 pools of headroom. A stage cap is a floor on caution, never a
+# licence to spend up to it — and it is never raised mid-run (ADR-003).
+STAGE_B_CREDIT_CAP = 400
+
 
 class MissingSecretError(RuntimeError):
     """A required secret is absent from the environment; names the variable."""

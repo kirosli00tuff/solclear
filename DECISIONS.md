@@ -91,3 +91,86 @@ never mid-sweep.
 overspend silently. The cost is friction: transports must be wrapped, and
 tests must construct a gate — which is exactly the friction that keeps an
 unmetered path from creeping in.
+
+## ADR-004: The live scoring path is not wired; the three missing links are named, not built
+
+**Date:** 2026-08-12 · **Status:** accepted
+
+**Context.** Stage A recorded the live pipeline (Method B fetch →
+enhanced-detail parse → features → clearance) as "wired as a library but has
+not been run". Stage B's live validation established that this was wrong, by
+mechanical check rather than judgement:
+
+1. **No parse step.** Method B returns `WindowFetch` of `SigInfo`
+   (signature/slot/block_time/err); `features.features()` consumes `list[Tx]`
+   (balance-changing events). No function in the package returns `Tx` — the
+   only construction anywhere is synthetic, in `tests/test_leakage.py`.
+2. **No enhanced-detail client.** `HeliusRpc` exposes four plain RPC methods
+   and nothing that calls the Enhanced Transactions API. The credit gate
+   prices an `enhanced` kind at weight 10 that **no client method can incur** —
+   the step was designed and never built.
+3. **No source for 4 of the 10 model features.** `freezable`, `mintable`,
+   `nontransf`, `thook` come from GoPlus token-security in the parent project;
+   this repo has no client for them, and `features.features()` produces the
+   other six only.
+
+A fourth question sits behind these: the committed snapshot carries **no
+launch T0**, so re-fetching a specific holdout pool needs its window start
+recovered first — by exactly the page-back-from-now operation Method B exists
+to avoid (ADR-002, FINDINGS.md §5).
+
+**Decision.** Stage B **stops at the finding and does not build the missing
+links.** Building three components and then validating them against a known
+answer inside the same stage would be reading a result against a bar their
+builder could see, which is the failure the project's known-answer discipline
+exists to prevent (CLAUDE.md, standing practices). The components are named
+here so the next stage can register bars for them **before** they exist, in
+that order: (a) T0 acquisition, since it gates everything; (b) enhanced-detail
+fetch and parse to `Tx`, whose correctness bar is that it reproduces the
+committed snapshot's six launch-window features on pools whose offline values
+are known; (c) a token-security source for the remaining four.
+
+**Consequences.** The retrieval half is validated and the scoring half is
+validated, and the repository ships neither a working end-to-end path nor a
+claim to have one — `README.md` already scopes the tool to a scorer over
+supplied features, which remains accurate. Two smaller live-path defects are
+recorded rather than fixed for the same scope reason: Method B carries no
+rate-limit pacing (the free tier returns HTTP 429 without it, measured on 3 of
+6 addresses), and `HeliusRpc.block_time` maps a JSON-RPC error to `None`,
+which `slot_at_or_after` cannot distinguish from a legitimately skipped slot —
+an error silently becoming a data condition, the shape CLAUDE.md forbids.
+
+## ADR-005: A pool that cannot be scored must not return a score
+
+**Date:** 2026-08-12 · **Status:** accepted · implementation deferred to the next stage
+
+**Context.** Stage B measured what a caller sees when scoring cannot honestly
+happen: `clearance("pool-with-no-data", {})` returns `cleared=False,
+clearance_score=0.4815`. Every absent feature becomes the `MISSING = -1.0`
+sentinel, the model scores that row, and the caller receives a plausible
+number. The same applies to a `reached_t0=False` truncation — observed live on
+a deep address, 40 pages and the window start never reached — because
+`solclear/scorer.py` references neither `reached_t0` nor `WindowFetch`: there
+is no structural link between "retrieval was incomplete" and "this must not be
+scored".
+
+For a library whose entire premise is not being misread, **0.48 read as weak
+clearance evidence when the truth is "no answer" is the most consequential
+misuse route found so far** — worse than the rug-alarm inversion ADR-001
+guards against, because it requires no misuse at all, only a partial fetch.
+
+**Decision.** An unscoreable pool must be **structurally incapable of
+returning a clearance score**. The verdict type must be able to express "no
+answer", and the required feature set must be checked before the booster is
+consulted, so a sentinel-only row cannot reach it. Retrieval completeness is
+part of scoreability: a fetch reporting `reached_t0=False` is a corrupted
+partial (ADR-002) and must not be scoreable either.
+
+**Consequences.** This changes the `Clearance` field set, which ADR-001 pins
+deliberately and `tests/test_honesty.py` asserts exactly — so it is an
+ADR-level decision made consciously, which is why it is recorded here rather
+than applied as a drive-by edit inside a validation stage. The honesty tests
+must be extended in the same change: an unscoreable input returning a number
+should break the build, exactly as a rug-detection-shaped name does. The new
+field must not read as danger (ADR-001's forbidden-name scan still applies),
+which points at a name describing *evidence sufficiency* rather than risk.

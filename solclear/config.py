@@ -23,6 +23,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # licence to spend up to it — and it is never raised mid-run (ADR-003).
 STAGE_B_CREDIT_CAP = 400
 
+# Stage C (2026-08-13) live-path build cap, registered in progress.md before
+# any Stage C code was written. Total ledger cumulative — 339 was already
+# spent at registration, so roughly 4,661 remains for the stage, sub-budgeted
+# in the registration. Never raised mid-run (ADR-003).
+STAGE_C_CREDIT_CAP = 5_000
+
 
 class MissingSecretError(RuntimeError):
     """A required secret is absent from the environment; names the variable."""

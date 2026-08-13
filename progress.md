@@ -1,5 +1,120 @@
 # progress.md — running log
 
+## Stage C — pre-registration: bars before the live path is built — 2026-08-13
+
+*Committed before any Stage C code exists and before any live call. Stage C
+builds the links ADR-004 named (T0 acquisition, enhanced client, parse,
+token-security source), implements ADR-005's refusal first, and ends with the
+system-level known-answer test. Disclosure as before: the repository and all
+prior results were read before writing this; every bar below is set against
+measurements not yet taken.*
+
+### Cap and sub-budgets
+
+- **Stage cap: 5,000 weighted credits, total ledger cumulative**
+  (`STAGE_C_CREDIT_CAP` in config.py) — 339 already spent, so ≤ 4,661 for
+  this stage, every request priced before sending as always.
+- **Sub-budgets, fixed so one busy pool cannot eat the stage:**
+  T0-tolerance measurement ≤ **400**; enhanced batch-semantics probes ≤
+  **400**; per-pool enhanced fetches (Tasks 5 + 8 combined) ≤ **3,400**,
+  pools processed sparse-first by in-window signature count, each pool's
+  enhanced sweep priced at ceil(n_sigs/100) × 100 and checked against the
+  sub-budget *before its first enhanced call* — a pool that does not fit is
+  skipped and reported, never partially fetched; ~460 slack. The stage stops
+  at the cap. A refusal is a working gate, and if the measured enhanced cost
+  makes even the known-answer test exceed the cap, the stage stops and
+  reports per the gate rather than raising anything.
+
+### Reproduction tolerance (carried from Stage B; amendments stated now, not after)
+
+Carried unchanged: clearance |Δ| ≤ 0.01 absolute and the `cleared` boolean
+identical on ≥ 90% of pools scored; `authority_revoked_in_window` exact
+(computed from in-window events by both paths); `n_early_holders` and
+`insider_funded_early_holders` ± 1; `creator_allocation_t0` and
+`top5_concentration_wend` ± 0.01 absolute; `creator_time_to_first_sell_s`
+± 60 s.
+
+- **Amendment 1** (reason: the monotonicity analysis postdates Stage B's
+  registration): the four GoPlus token-security fields are *now-state*, so
+  they compare directionally. Live **present** (1) must agree with the
+  snapshot — an authority present now was present at launch. Live **absent**
+  (0) against snapshot 1 is classified **monotonic-unknowable** (an authority
+  can be revoked after the window), a provenance category, not a defect.
+- **Amendment 2** (reason: the committed snapshot carries no label-event
+  time): the live path passes `label_event_s=None`. The window guard's
+  refusal protected label construction at training time; it cannot be
+  re-checked retrospectively, and this is declared now rather than
+  discovered later.
+- **Refusal-refusal agreement:** a pool whose snapshot row lacks a required
+  feature (encoded −1.0 there) is *expected* to produce a live `Unscorable`
+  naming the same absent fields — that outcome is agreement under the new
+  contract, not a mismatch.
+- **The refusal boundary, exactly:** `clearance()` refuses when a required
+  feature key is **absent or None**. An explicit float −1.0 passes through
+  as the model's trained missing-encoding — the sentinel collides with
+  legitimate negative `creator_time_to_first_sell_s` values, snapshot rows
+  carry it, and the live path never fabricates it (an unavailable live
+  feature is None, which refuses).
+- The tolerance is not adjusted to fit any result. A genuine mismatch on a
+  field both paths should compute identically stops the stage with the cause
+  reported.
+
+### Enhanced-cost decision thresholds (fixed before Task 5 can measure)
+
+Let **E** = measured per-pool enhanced credits. With the retrieval floor
+37.8/pool and the addendum's measured rates against Helius's published tiers
+(free 1M, Developer 10M, Business 100M per month):
+
+| scanner scope | rate/day | free tier iff | Developer $49 iff | Business $499 iff |
+|---|---|---|---|---|
+| graduations, public band low | 80 | E ≤ 373 | — | — |
+| graduations, public band high | 269 | E ≤ 84 | E ≤ 1,185 | — |
+| graduations, sample rate | 665 | E ≤ 11 | E ≤ 456 | — |
+| AMM pools only | 1,330 | never (floor exceeds) | E ≤ 209 | — |
+| full feed | 9,017 | never | never (floor exceeds) | E ≤ 327 |
+
+Since one enhanced call is 100 credits, "free tier, graduations-only"
+survives only at the public-band-low rate or with zero enhanced calls per
+pool. These thresholds could not see Task 5's number.
+
+### The Task 8 pool set, registered
+
+The Stage B five — `CP1KFKft4HtvNgNx5PDPrsmZbBs9fDFoVbJAKfiRAUde`,
+`2E6SSuVKVrQ6113KpWvzvhfY9yQ647E83V6e656fpump`,
+`12WRu4BdJk1yM3Nk433yg3S9GnxniUdueeu29iMPpump`,
+`2ZpmY9iSdbSZVkuv64Y467FcQ5vJegbUTTMr4YJyjb2X`,
+`8BnZ17s9pAd3g7s7jSPr2efXLEdKHMajqPYEkcSjmdm1` (hard_rug) — plus hard rugs
+`Hp4XeAZ5EhKnFGm8Yv5GhZYmspNXGWV8SoRXPz91ZUab` and
+`7CSWFsrB3gPc5o5hxKTJCUbFDq4QyTWpjVG76S1Xpump` from the addendum's resolved
+sample. T0 comes from the Task 4 resolver; a mint that fails to resolve is
+reported and excluded, never substituted.
+
+### Definitions registered before the components exist
+
+- **creator** := the recipient wallet of the first `mint_to` event inside
+  the window; if the window contains none, the fee payer of the earliest
+  in-window transaction. (creator_* features depend on this; fixed now.)
+- **Refusal semantics** are registered as executable assertions in
+  `tests/test_refusal.py`, strict-xfail until Task 1 implements them: an
+  empty or partial feature mapping returns an `Unscorable` (a distinct type
+  with *no* `clearance_score` and *no* `cleared` attribute) carrying the
+  reason, the missing field names, and the calibration statement; a
+  `reached_t0=False` fetch refuses at the pipeline level
+  (`solclear.pipeline.score_pool`); a parse reporting unparseable
+  transactions refuses. The credit-gate refusal (`CreditCapError` before any
+  request) is a different fact and stays unchanged.
+- **Fail-closed known-answer tests pinned:**
+  `7CSWFsrB3gPc5o5hxKTJCUbFDq4QyTWpjVG76S1Xpump` (documented in-holdout hard
+  rug, all 10 features real, offline score 0.4978 < threshold 0.5963) must
+  never clear; an empty feature mapping must refuse rather than produce the
+  0.4815 Stage B measured. Both run on every test pass from now on.
+
+### ETAs (measured baseline: Stage B ~1.5 h for six tasks; the addendum held its registration)
+
+T0 20 m, T1 45 m, T2 10 m, T3 40 m, T4 45 m, T5 50 m, T6 60 m, T7 30 m,
+T8 45 m, T9 40 m — ≈ 6.5 h. Standing constraints: the behavioural signal
+stays not shipped; work in this repository only.
+
 ## Stage B addendum — pre-registration: scanner cost model and outcome-study feasibility — 2026-08-12
 
 *Committed before any probe. The Stage B entry below covered Tasks 0–3 and the

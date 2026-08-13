@@ -14,7 +14,7 @@ differ — the standing lesson):
 - ``POST /v0/transactions`` accepts up to **100 signatures per request**.
 - Billing is a flat **100 credits per request** regardless of batch fill,
   so a pool window of N signatures costs ``ceil(N / 100) * 100`` credits —
-  :func:`calls_needed` × 100 — and a sweep must be priced with it *before*
+  :func:`calls_needed` * 100 — and a sweep must be priced with it *before*
   the first call (registered sub-budget rule).
 - The free plan rate-limits this API at 2 req/s (documented); the default
   pacing below uses 0.6 s spacing — documented-with-margin, flagged as

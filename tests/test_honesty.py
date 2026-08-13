@@ -20,7 +20,7 @@ import lightgbm as lgb
 import numpy as np
 
 import solclear
-from solclear import metrics, train
+from solclear import metrics, pipeline, train
 from solclear import scorer as sc
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -73,7 +73,7 @@ def test_scope_statement_exists_in_claude_md_and_readme() -> None:
 
 
 def test_api_exposes_no_rug_detection_shaped_name() -> None:
-    modules = (solclear, sc, metrics)
+    modules = (solclear, sc, metrics, pipeline)
     for module in modules:
         public = [n for n in vars(module) if not n.startswith("_")]
         for name in public:
@@ -90,6 +90,24 @@ def test_clearance_field_set_is_pinned_exactly() -> None:
     # change that must be made consciously, against this test and ADR-001.
     fields = set(sc.Clearance.__dataclass_fields__)
     assert fields == {"pool", "cleared", "clearance_score", "calibration"}
+
+
+def test_unscorable_field_set_is_pinned_and_carries_no_score() -> None:
+    # ADR-006 (the operator decision ADR-005 deferred): a pool that cannot be
+    # honestly scored returns a refusal that is structurally incapable of
+    # being read as a low clearance — no score field, no cleared field. This
+    # pin is as deliberate as Clearance's own.
+    fields = set(sc.Unscorable.__dataclass_fields__)
+    assert fields == {"pool", "reason", "missing", "calibration"}
+    assert "clearance_score" not in fields
+    assert "cleared" not in fields
+
+
+def test_an_unscoreable_input_returning_a_number_breaks_the_build() -> None:
+    # The Stage B defect, held down at the honesty level: an empty feature
+    # mapping must never again produce a confident-looking 0.4815.
+    verdict = sc.clearance("no-data-anywhere", {})
+    assert isinstance(verdict, sc.Unscorable)
 
 
 def test_calibration_statement_carries_scope_and_misuse_figures() -> None:

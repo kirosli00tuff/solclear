@@ -174,3 +174,43 @@ must be extended in the same change: an unscoreable input returning a number
 should break the build, exactly as a rug-detection-shaped name does. The new
 field must not read as danger (ADR-001's forbidden-name scan still applies),
 which points at a name describing *evidence sufficiency* rather than risk.
+
+## ADR-006: The verdict is Clearance or Unscorable; a refusal carries no number
+
+**Date:** 2026-08-13 · **Status:** accepted · implements ADR-005, extends ADR-001
+
+**Context.** Stage B measured the hazard (ADR-005): `clearance(pool, {})`
+returned `cleared=False, clearance_score=0.4815` — every absent feature became
+the trained −1.0 sentinel, the model scored the sentinel row, and a caller
+read a number where the truth was "no answer". ADR-001 pins the `Clearance`
+field set deliberately, so closing this required an ADR-level contract change,
+which the Stage C brief sanctioned as the operator decision ADR-005 deferred.
+The change was registered before it was implemented: the refusal semantics
+were committed as strict-xfail assertions (Stage C Task 0, e38b185) that the
+implementation then made true.
+
+**Decision.** `clearance()` returns `Clearance | Unscorable`. `Unscorable` is
+a frozen dataclass pinned to exactly `{pool, reason, missing, calibration}` —
+**no `clearance_score`, no `cleared`** — so mistaking a refusal for a low
+clearance is a type error, not a misreading. `reason` ∈ `missing_features` /
+`retrieval_incomplete` / `parse_incomplete`. The refusal boundary is
+**absent-or-None**: an explicit −1.0 float passes through as the model's
+trained missing-encoding, because the sentinel collides with legitimate
+negative `creator_time_to_first_sell_s` values in real snapshot rows, and the
+live path never fabricates it (an unavailable live feature is None).
+`solclear.pipeline.score_pool` is the only sanctioned path from a retrieved
+window to a verdict: it refuses `reached_t0=False` (a corrupted partial,
+ADR-002) and any unparseable-transaction count before features are computed.
+The credit-gate refusal (`CreditCapError` before any request) remains a
+separate exception — a budget fact, not a scoring fact. The honesty tests pin
+the `Unscorable` field set exactly as they pin `Clearance`'s, assert an
+unscoreable input returns no number, and scan `pipeline` for
+detection-shaped names.
+
+**Consequences.** Callers must narrow the union before touching a score,
+which is the point: the most consequential misuse route Stage B found — a
+truncated fetch or empty mapping read as weak clearance — is now closed by
+the type system rather than by documentation. The cost is that snapshot rows
+whose own features are absent-encoded refuse under the live contract; the
+Stage C registration classifies live-refusal-on-snapshot-absent as agreement,
+not mismatch.

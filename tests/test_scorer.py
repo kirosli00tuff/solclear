@@ -48,13 +48,22 @@ def _toy_scorer() -> sc.ClearanceScorer:
     )
 
 
+def _full(**overrides: float) -> dict[str, float | None]:
+    # A complete feature mapping (ADR-006: any absent feature now refuses).
+    base: dict[str, float | None] = dict.fromkeys(sc.FEATURES, 0.0)
+    base.update(overrides)
+    return base
+
+
 def test_clearance_score_falls_as_concentration_rises() -> None:
     # Higher launch concentration is rug-like: clearance evidence must drop.
     scorer = _toy_scorer()
 
-    concentrated = scorer.clearance("POOL_HI", {"top5_concentration_wend": 0.95})
-    dispersed = scorer.clearance("POOL_LO", {"top5_concentration_wend": 0.30})
+    concentrated = scorer.clearance("POOL_HI", _full(top5_concentration_wend=0.95))
+    dispersed = scorer.clearance("POOL_LO", _full(top5_concentration_wend=0.30))
 
+    assert isinstance(concentrated, sc.Clearance)
+    assert isinstance(dispersed, sc.Clearance)
     assert 0.0 <= concentrated.clearance_score <= 1.0
     assert 0.0 <= dispersed.clearance_score <= 1.0
     assert dispersed.clearance_score > concentrated.clearance_score
@@ -67,7 +76,7 @@ def test_clearance_returns_verdict_with_calibration_attached() -> None:
     # calibration statement — never a bare number.
     scorer = _toy_scorer()
 
-    verdict = sc.clearance("MINT_A", {"top5_concentration_wend": 0.30}, scorer=scorer)
+    verdict = sc.clearance("MINT_A", _full(top5_concentration_wend=0.30), scorer=scorer)
 
     assert isinstance(verdict, sc.Clearance)
     assert verdict.pool == "MINT_A"
@@ -82,6 +91,6 @@ def test_load_scorer_reads_the_committed_artifact_and_scores() -> None:
 
     assert scorer.threshold > 0.0
     assert "0.984" in scorer.calibration
-    verdict = scorer.clearance("SMOKE", {"top5_concentration_wend": 0.5, "mintable": 0.0})
+    verdict = scorer.clearance("SMOKE", _full(top5_concentration_wend=0.5))
     assert isinstance(verdict, sc.Clearance)
     assert verdict.calibration == scorer.calibration

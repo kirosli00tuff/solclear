@@ -81,6 +81,26 @@ class Clearance:
 
 
 @dataclass(frozen=True)
+class Unscorable:
+    """A refusal: this pool cannot be honestly scored, and no number is returned.
+
+    Deliberately carries NO ``clearance_score`` and NO ``cleared`` — Stage B
+    measured that an unscoreable pool scoring 0.4815 reads as weak clearance
+    evidence when the truth is "no answer" (ADR-005/ADR-006), so mistaking a
+    refusal for a low clearance is a type error here, not a misreading.
+    ``reason`` is one of ``missing_features`` / ``retrieval_incomplete`` /
+    ``parse_incomplete``; ``missing`` names the absent features when that is
+    the reason. The credit-gate refusal (``CreditCapError`` before any request
+    is sent) is a different fact and stays a separate exception.
+    """
+
+    pool: str
+    reason: str
+    missing: tuple[str, ...]
+    calibration: str
+
+
+@dataclass(frozen=True)
 class ClearanceScorer:
     """A loaded model answering exactly one question: clearance."""
 
@@ -88,8 +108,24 @@ class ClearanceScorer:
     threshold: float  # registered operating threshold in clearance-score space
     calibration: str
 
-    def clearance(self, pool: str, features: Mapping[str, float | None]) -> Clearance:
-        """Clearance verdict for one pool's launch-window feature dict."""
+    def clearance(self, pool: str, features: Mapping[str, float | None]) -> Clearance | Unscorable:
+        """Clearance verdict, or a refusal when any required feature is absent.
+
+        The refusal boundary (registered in Stage C Task 0): a feature key
+        that is absent or ``None`` refuses. An explicit float ``-1.0`` passes
+        through as the model's trained missing-encoding — the sentinel
+        collides with legitimate negative ``creator_time_to_first_sell_s``
+        values in real snapshot rows, and a live retrieval path never
+        fabricates it (an unavailable live feature is ``None``).
+        """
+        absent = tuple(k for k in FEATURES if features.get(k) is None)
+        if absent:
+            return Unscorable(
+                pool=pool,
+                reason="missing_features",
+                missing=absent,
+                calibration=self.calibration,
+            )
         raw = self.booster.predict([feature_vector(features)])
         score = 1.0 - float(raw[0])
         return Clearance(
@@ -123,11 +159,13 @@ def clearance(
     pool: str,
     features: Mapping[str, float | None],
     scorer: ClearanceScorer | None = None,
-) -> Clearance:
-    """Clearance verdict for a pool identifier and its launch-window features.
+) -> Clearance | Unscorable:
+    """Clearance verdict — or an :class:`Unscorable` refusal — for one pool.
 
-    ``features`` comes from the caller's retrieval pipeline (Method B fetch ->
-    ``solclear.features.features``), keeping this function scorable without a
-    vendor key. With no ``scorer`` given, the committed artifact is used.
+    ``features`` comes from the caller's retrieval pipeline (see
+    ``solclear.pipeline.score_pool`` for the gated live path), keeping this
+    function scorable without a vendor key. With no ``scorer`` given, the
+    committed artifact is used. A mapping missing any required feature is
+    refused, never scored (ADR-005/ADR-006).
     """
     return (scorer or _default_scorer()).clearance(pool, features)

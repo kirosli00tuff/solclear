@@ -214,3 +214,102 @@ the type system rather than by documentation. The cost is that snapshot rows
 whose own features are absent-encoded refuse under the live contract; the
 Stage C registration classifies live-refusal-on-snapshot-absent as agreement,
 not mismatch.
+
+## ADR-007: T0 is per-path — a first-party observation live, an external claim retrospectively, and the snapshot's basis is token launch, not pool creation
+
+**Date:** 2026-08-13 · **Status:** accepted
+
+**Context.** ADR-004 named T0 acquisition as the question preceding the rest
+of the live path. Stage C built two paths: the scanner's (`LiveT0Source`,
+interface only — creation observed as it happens, first-party, free) and the
+retrospective resolver (GeckoTerminal token→pools, earliest
+`pool_created_at`, keyless). Stage C.1 measured the claim against on-chain
+first pool activity on six 2024 pools: **median −1 s, range [−27, 0]** —
+accurate to seconds. The same run's KAT then found that accuracy answers the
+wrong question for the snapshot: three of four snapshot
+`creator_time_to_first_sell_s` values are *negative* and one snapshot window
+saw 0 holders where the pool-creation window holds 1,049 events, so the
+parent project anchored its feature windows at **token launch**
+(mint/bonding start, which FINDINGS.md §3 already noted predates the pool),
+not at pool creation.
+
+**Decision.** T0 is typed and treated per path. Retrospective T0 is a
+`T0Claim` — stamped with source, URL, and retrieval time, never trusted
+untested (its tolerance is a measured quantity). Pool-creation T0 is the
+correct anchor for **scoring a pool at launch going forward** and for any
+claim about the pool itself. It is the **wrong basis for reproducing the
+committed snapshot**, whose windows are token-launch-anchored; the
+retrospective KAT therefore stands blocked until a token-launch T0 source is
+built and measured (candidate: paging the mint backward from the pool
+anchor, cost O(bonding history) — priced before trusted, like everything
+else). Neither the scorer's holdout figures nor Method B is touched by this;
+the live scanner is untouched because it observes the true launch
+first-party.
+
+**Consequences.** No retrospective clearance may be represented as a
+snapshot reproduction until the basis matches. The KAT's zero genuine
+mismatches on basis-independent fields (authority 4/4, token-security 16/16)
+plus systematic divergence on window-derived fields is the measured evidence
+this split is real rather than a modeling excuse.
+
+## ADR-008: Enhanced pricing is measured — the boundary is 100/call, and the cost lever is scope, never depth
+
+**Date:** 2026-08-13 · **Status:** accepted
+
+**Context.** The gate priced `enhanced` at the vendor's published 100/call
+before the client existed (Stage C Task 2). Stage C.1 measured the batch
+semantics with real signatures: 100 accepted, **101 → HTTP 400** — the
+boundary is exactly the documented 100. No response carries credit/usage
+headers, so per-call billing stays vendor-documented and the ledger's raw
+counts remain the only reconciliation path (ADR-003 confirmed again).
+Measured per-pool enhanced cost over seven launch windows spanning
+83–9,808 signatures: **typical ≈ 1,400 credits, conservative ≈ 2,000,
+extreme 9,900 — 35–260× the ~38-credit retrieval floor.** Against the
+pre-registered thresholds: the free tier is dead for any enhanced-bearing
+scan; Developer $49 survives only graduations at the 80/day band; Business
+$499 covers graduations and AMM-only at typical cost; the full feed exceeds
+Professional.
+
+**Decision.** Per-pool enhanced cost is `100 × ceil(window_sigs / 100)` and
+every pool's whole sweep is priced against its budget **before its first
+call** (the Stage C.1 run skipped three pools this way rather than
+overrunning — the discipline is now precedent, not aspiration). Because
+ADR-006 makes truncation refuse, **cost cannot be reduced by fetching part
+of a window**: the only honest lever is which pools to score, never how much
+of each window to read. The tier decision belongs to Stage D and must be
+made from these measured numbers.
+
+**Consequences.** Scanner economics are now a scoping decision with measured
+prices attached. Any future proposal to "sample" a window's transactions is
+a proposal to un-do ADR-006 and must be argued as such, in an ADR, not
+slipped in as an optimization.
+
+## ADR-009: The parse event vocabulary, with direction judged relative to the pool
+
+**Date:** 2026-08-13 · **Status:** accepted
+
+**Context.** ADR-004's second missing link: nothing converted enhanced
+payloads into `features.Tx`. The vocabulary any conversion chooses IS the
+feature semantics, so it is recorded here rather than only in docstrings.
+
+**Decision.** Relative to scored mint M and launch pool P: `mint_to` = a
+token transfer of M with no sender (creation); **`sell` = M flowing INTO P,
+by the sender — direction is judged relative to the pool**, whatever the
+counter-asset did; buys (M out of P) are `transfer` events with
+`source = P`, so pool-funded buyers can never enter the creator-funded
+insider set; wallet-to-wallet movements of M are `transfer` with the sender
+as source; `revoke_authority` = a SET_AUTHORITY payload referencing M, with
+its stated approximation (an authority *transfer* would also match — the
+feature is binary presence and the approximation is recorded, not hidden).
+Every payload lands in exactly one of parsed / ignored (understood,
+deliberately no event) / unparseable, and **any unparseable count refuses
+scoring** (ADR-006). The leakage suite runs through the parse: prefix
+invariance plus a planted canary that clamps out-of-window timestamps
+inward — the realistic leak shape, since `features()` re-clamps its own
+window and mere inclusion cannot leak.
+
+**Consequences.** First live contact measured **0 unparseable across 2,758
+real payloads** (1,561 parsed, 1,197 understood-ignored), so the vocabulary
+covers the wild shapes seen so far; the day it meets one it does not
+understand, the answer is a refusal and a vocabulary extension reviewed
+against this ADR — never a silent drop.

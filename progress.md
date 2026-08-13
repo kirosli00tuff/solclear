@@ -115,6 +115,196 @@ T0 20 m, T1 45 m, T2 10 m, T3 40 m, T4 45 m, T5 50 m, T6 60 m, T7 30 m,
 T8 45 m, T9 40 m — ≈ 6.5 h. Standing constraints: the behavioural signal
 stays not shipped; work in this repository only.
 
+## Stage C.1 — live execution: the path runs end to end and fails closed; the KAT is blocked by a measured T0-basis mismatch, not a defect — 2026-08-13
+
+*Executed against the bars registered in the Stage C pre-registration above
+(e38b185). Opening ledger position: **339**. Closing: **4,220** of the 5,000
+cap — 3,881 spent this stage (phase A 294, phase B 400, phase C retrieval
+253, phase C enhanced 2,900, refusal demo 34), every request priced before
+sending. The registered sub-budgets held: phase B closed at exactly its 400;
+phase C's pricing-before-first-call skipped three pools rather than
+overrunning. `make lint`, `make typecheck`, `make test` green (95 passed).
+ETAs held (~55 m measurement wall time against the ~27 m estimated for
+tasks 3–5, the overshoot being enhanced-call pacing; report ~35 m).*
+
+### Task 1 — credential and gate
+
+The operator authorised the second on-disk copy Stage B deferred:
+`SOLCLEAR_HELIUS_API_KEY` written into `.env` by line transformation from
+the MLCryptoEngine `.env` (never echoed to history, log, or commit). Checks
+before proceeding, all passed: `.env` gitignored and untracked; an in-memory
+scan found the key in **no tracked file and nowhere in `git log -p --all`**;
+`require_helius_key()` returns `SecretStr('**********')`. Cap 5,000 in
+force; `enhanced` prices at 100 (vendor page) not the old 10; `rpc` at 1.
+
+### Task 2 — refusal behaviour on live objects
+
+What a caller receives, in each case — none is a number:
+
+1. Empty feature mapping → `Unscorable(reason='missing_features')` naming
+   all 10 fields. The object has **no** `clearance_score` and no `cleared`
+   attribute; reading one is an `AttributeError`, not a low clearance.
+2. A **real** truncation (2ZpmY9iS… re-fetched with `page_limit=25`,
+   `max_pages=1`: `reached_t0=False`, 34 credits) →
+   `Unscorable(reason='retrieval_incomplete')`.
+3. A **real** parsed window with one token-security field withheld (the
+   withholding is the one synthetic step, stated as such) →
+   `Unscorable(reason='missing_features', missing=('creator_time_to_first_sell_s', 'thook'))` —
+   every absent field named.
+4. The documented holdout hard rug (7CSWFsrB…pump, all features real) →
+   `Clearance(cleared=False, clearance_score=0.4978)` with the 874-char
+   calibration statement attached. Not cleared, and not a refusal.
+
+### Task 3 — T0 acquisition and its measured tolerance
+
+The resolver resolved **6/6** pre-registered addendum mints — all via
+GeckoTerminal (the addendum's finding stands: DexScreener has forgotten
+five of the six; resolution source is recorded per claim in
+`data/vendor/stage_c_t0_claims.json`). Claimed `pool_created_at` against
+earliest on-chain pool activity over [T0c − 1 h, T0c + 30 min):
+
+| pool (mint) | offset s | reached_t0 | in-window sigs | credits |
+|---|---|---|---|---|
+| Hp4XeAZ5… | −1 | True | 3,299 | 42 |
+| UutVe14D… | −27 | True | 12,793 | 55 |
+| 7CSWFsrB… | 0 | True | 18,099 | 53 |
+| CP1KFKft… | −1 | True | 220 | 47 |
+| gYgUiBNG… | −1 | True | 2,705 | 45 |
+| 36gmCN9H… | 0 | True | 9,008 | 52 |
+
+**Distribution: median −1 s, range [−27, 0].** The window derives as
+[claimed_t0, claimed_t0 + 1,800 s); a worst-case −27 s claim error is 1.5%
+of the window length, so the derivation is sound **for pool-creation
+anchoring**. What Task 5 then measured is that pool-creation anchoring is
+the wrong basis for the *snapshot* — see below; the claim itself is
+accurate about what it claims.
+
+### Task 4 — enhanced pricing, measured (the stage's most consequential number)
+
+**Batch semantics by measurement:** 1 signature → HTTP 200 (1 returned);
+100 → HTTP 200 (100 returned); **101 → HTTP 400. The acceptance boundary is
+exactly 100.** No credit/usage headers exist on any response, so per-call
+billing is vendor-documented (100/call flat, docs read 2026-08-13) rather
+than response-observable; the ledger's raw counts remain the operator's
+reconciliation path (ADR-003).
+
+**Per-pool enhanced cost** = 100 × ceil(in-window sigs / 100), priced for
+all seven registered pools, executed sparse-first for four:
+
+| pool | sigs | priced | run |
+|---|---|---|---|
+| CP1KFKft… | 83 | 100 | ✓ |
+| 2E6SSuVK… | 288 | 300 | ✓ |
+| 8BnZ17s9… | 1,050 | 1,100 | ✓ |
+| 2ZpmY9iS… | 1,337 | 1,400 | ✓ |
+| Hp4XeAZ5… | 1,843 | 1,900 | skipped by sub-budget, priced before first call |
+| 12WRu4Bd… | 1,916 | 2,000 | skipped likewise |
+| 7CSWFsrB… | 9,808 | 9,900 | skipped likewise |
+
+Stage-B-style figures: **typical ≈ 1,400/pool** (median of the seven
+priced; mean excluding the extreme 1,283), **conservative ≈ 2,000**,
+extreme observed **9,900** — that is **35–260× the ~38-credit retrieval
+floor**. Read against the registered thresholds, unsoftened:
+
+- **Free tier: dead for any enhanced-bearing scan.** Every scope's free
+  threshold (E ≤ 373 at best) is below even the cheapest measured pool.
+- **Graduations-only:** Developer $49 survives only at the public-band-low
+  80/day (needs E ≤ ~4,074 — typical and conservative fit; the 9,900 tail
+  does not); at 269/day Developer needs E ≤ 1,185, which typical 1,400
+  misses — **Business $499**; at the 665/day sample rate, Business.
+- **AMM-only (1,330/day):** Business (its E ≤ ~2,435 covers typical and
+  conservative; not the tail).
+- **Full feed (9,017/day):** Business needs E ≤ 327 and Professional
+  E ≤ ~692 — both fail at typical cost. **Beyond Professional.**
+
+Structural note: E cannot be cut by fetching fewer of a window's
+transactions — that is truncation, and ADR-006 makes truncation refuse.
+The honest cost lever is scope (which pools), not depth (how much of each
+window). The tier decision is Stage D's, from these numbers.
+
+### Task 5 — the system-level known-answer test, and what it found
+
+Four pools ran the full path: resolve T0 → Method B fetch (34–43
+credits/pool across 83–9,808-sig windows — depth independence again) →
+enhanced fetch → parse → features → score. **Parse coverage, first-class:
+2,758 payloads examined, 1,561 parsed to known kinds, 1,197 ignored as
+understood-irrelevant (failed transactions, other mints' transfers,
+native-SOL-only movements), 0 unparseable.** Per pool
+(total/parsed/ignored/unparseable): CP1K 83/75/8/0; 2E6S 288/133/155/0;
+8BnZ 1,050/1,049/1/0; 2Zpm 1,337/304/1,033/0.
+
+**Verdicts:** live path returned `Unscorable(missing_features:
+creator_time_to_first_sell_s …)` on all four; offline snapshot rows scored
+0.4815–0.5963 (2ZpmY9iS offline `cleared=True`). The registered
+clearance-reproduction bar (|Δ| ≤ 0.01, same `cleared`, ≥ 90% of pools) is
+therefore **not met — reported, with the cause, and the tolerance not
+adjusted.**
+
+**The cause, identified mechanically rather than guessed — the two paths do
+not share an input basis:**
+
+- The snapshot's own `creator_time_to_first_sell_s` values are −58, −30,
+  −1, +33 s: three of four are **negative**, meaning the parent's feature
+  events include activity **before its T0** — structurally impossible under
+  a [T0, T0+30 min) window anchored at pool creation.
+- 8BnZ17s9's snapshot window saw **0 early holders** while the live
+  pool-creation window is a 1,049-event storm; 2Zpm 5 vs 704; CP1K 8 vs 60.
+  The parent anchored at **token launch** (mint/bonding start — FINDINGS.md
+  §3 already recorded that the mint generally predates the pool), the live
+  path anchored at **pool creation**, and Task 3 proved the pool-creation
+  claim itself accurate to seconds. Different basis, not wrong arithmetic.
+- The classification confirms the split exactly: **every basis-independent
+  field agrees — `authority_revoked_in_window` 4/4 exact, the four
+  token-security fields 16/16 exact, `insider_funded_early_holders` 3/4
+  within ±1, `creator_allocation_t0` exact on the one pool whose snapshot
+  value is basis-free (0.0)** — and every disagreement (top5 3, n_early 4,
+  alloc 2, insider 1, TTFS-absent 4) sits on a window-derived field. Two
+  comparisons additionally hit snapshot −1.0 sentinels (parent-absent) that
+  the harness classifier compared as values; noted as a classifier
+  artifact, raw JSON preserved unsmoothed
+  (`data/vendor/stage_c_live_results.json`).
+- No monotonic field disagreed. No monotonic-unknowable case occurred (all
+  four GoPlus flags are 0 in both eras). **Zero genuine mismatches survive
+  on any field whose inputs the paths actually share.**
+
+Under the old contract, these wrong-basis windows would each have produced
+a confident-looking score. Under ADR-006 all four **refused**, naming the
+absent field — the fail-closed design did exactly its job on first live
+contact.
+
+### Does the live scoring path work end to end?
+
+**Mechanically: yes.** Resolve → fetch → parse → features →
+score-or-refuse ran against the live chain with every link present, 0
+unparseable transactions, gate-priced spending, and refusals exactly where
+honesty required them. This is the question Stage B could not reach, and
+the answer is yes.
+
+**As a reproduction of the committed snapshot: no — and the blocker is
+named.** Retrospective reproduction requires the parent's T0 (token
+launch), which precedes pool creation; the resolver's pool_created_at is
+accurate but answers a different question. Per the registered outcome map
+the stage stops at this finding. The scorer's holdout figures and Method
+B's cost claim are untouched by it (both re-verified in this run); the
+forward scanner is also untouched — a live scanner observes the true
+launch first-party (`LiveT0Source`), so the basis problem is
+retrospective-only.
+
+### Open (consolidated; supersedes the Stage C list)
+
+1. **Retrospective T0 basis**: the KAT needs token-launch T0, not
+   pool-creation T0. Candidate recoveries, unmeasured: page the mint
+   address backward from the pool anchor (cost O(bonding history) —
+   measure before trusting), or a bonding-era source. Until then the
+   retrospective KAT stands blocked at the basis finding.
+2. **Tier decision (Stage D's)**, from measured numbers: free tier dead for
+   scanning; Developer $49 only for graduations at the 80/day band;
+   Business $499 for graduations/AMM-only at realistic rates; full feed
+   beyond Professional. Scope is the cost lever; depth is not (ADR-006).
+3. Harness classifier: treat snapshot −1.0 sentinels as parent-absent in
+   the next comparison run (report artifact only; JSON preserved).
+4. The behavioural signal stays not shipped (+0.032, CI includes zero).
+
 ## Stage B addendum — pre-registration: scanner cost model and outcome-study feasibility — 2026-08-12
 
 *Committed before any probe. The Stage B entry below covered Tasks 0–3 and the

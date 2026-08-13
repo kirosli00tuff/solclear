@@ -1,5 +1,75 @@
 # progress.md — running log
 
+## Stage B addendum — pre-registration: scanner cost model and outcome-study feasibility — 2026-08-12
+
+*Committed before any probe. The Stage B entry below covered Tasks 0–3 and the
+misuse check; two measurements from the stage brief remain — the scanner cost
+model and the outcome-study feasibility check — and their bars are fixed here
+first. Disclosure, same as the parent registration: the repository and the
+Stage B results were read before writing this; the bars below are set against
+external measurements not yet taken.*
+
+### Cap and scope for this addendum
+
+- **Zero weighted Helius credits.** Both measurements use keyless public
+  endpoints only; the gate is untouched and the ledger must end this addendum
+  at its current cumulative 339. If any step turns out to require a Helius
+  call, the addendum stops and reports that instead.
+- **Probe budget: ≤ 40 keyless HTTP requests**, paced to each source's
+  published rate limit (GeckoTerminal: 30 req/min → ≥ 2 s spacing).
+
+### Task 4 bars — scanner cost model (measure, then multiply)
+
+- **Population**: pools the scanner would score = newly created Solana DEX
+  pools as indexed by GeckoTerminal's public `new_pools` feed (all Solana
+  DEXes it tracks). Measured, not quoted: retrieve the newest N ≥ 100 pools,
+  rate = N ÷ (retrieval time − oldest `pool_created_at` among them), converted
+  to pools/day. Source URL and retrieval timestamp recorded.
+- **Cross-check**: at least one independent public figure (e.g. pump.fun
+  graduations/day, a known subset). Disagreement > 2× with the measurement is
+  reported as a disagreement, never averaged away.
+- **Per-pool cost**: the Stage B measured figures only — 37.8 weighted
+  credits/pool typical (the five snapshot addresses), 44.8 conservative
+  (including the deep control). Stated as a **floor**: the enhanced-parse and
+  token-security steps are NOT-WIRED (ADR-004) and their cost is unmeasured —
+  it is not projected. Noted equally: a real-time scanner observes T0 as it
+  happens and may not pay the measured ~34–41-credit anchor; that saving is
+  also unmeasured, so the projection keeps the measured figure.
+- **Allowance**: Helius's published free-tier monthly credit allowance, read
+  today from the public pricing/docs page; figure and URL recorded.
+- **Verdict arithmetic, fixed now**: daily burn = pools/day × per-pool cost;
+  monthly = daily × 30.4. A shortfall exists iff monthly burn > the free
+  allowance. If one exists, report: (a) the affordable coverage fraction =
+  allowance ÷ monthly burn; (b) the cheapest paid tier that covers it; (c) a
+  liquidity-threshold cut only if the feed exposes per-pool liquidity, so the
+  cut is measured on the same sample rather than assumed.
+
+### Task 6 bars — outcome-study feasibility (identifiers and price history)
+
+- **Sample, fixed before probing** — first rows in file order per class among
+  `year == 2024` in the committed snapshot, no cherry-picking:
+  hard_rug: `Hp4XeAZ5EhKnFGm8Yv5GhZYmspNXGWV8SoRXPz91ZUab`,
+  `UutVe14D7KVKdLzDtbKmWet2jo6wVfw8aMHovr6wMs5`,
+  `7CSWFsrB3gPc5o5hxKTJCUbFDq4QyTWpjVG76S1Xpump`;
+  honest_candidate: `CP1KFKft4HtvNgNx5PDPrsmZbBs9fDFoVbJAKfiRAUde`,
+  `gYgUiBNGMgHiKC2aReo12JTp5rJP4WpR892hFcbpump`,
+  `36gmCN9HLE5s6j8FdEYUCywByZU2KKKYy3UnAShmpump`.
+- **Resolution bar**: a mint *resolves* iff a keyless endpoint (DexScreener
+  `/latest/dex/tokens/{mint}`, else GeckoTerminal token→pools) returns ≥ 1
+  pool whose base token is the mint.
+- **History bar**: the outcome study is *feasible* iff daily candles from a
+  free source span **≥ 30 days from the token's first recorded candle for
+  ≥ 5 of 6 mints, and ≥ 90 days for ≥ 4 of 6 — in each case including at
+  least 2 of the 3 hard_rug mints.** Dead tokens are the point of the study;
+  a source that only remembers survivors fails this bar regardless of the
+  overall counts, and the specific gap is reported rather than smoothed.
+- **Benchmark leg**: a free daily SOL/USD series covering 2024 with ≥ 90-day
+  horizon must exist and is named with its URL (candidate: Binance public
+  klines, keyless).
+
+ETAs against a measured baseline (Stage B ran ~1.5 h for six tasks): Task 4
+~25 min, Task 6 ~20 min, report + `make lint/typecheck/test` ~15 min.
+
 ## Stage B — pre-registration: bars for the live end-to-end validation — 2026-08-12
 
 *Committed before any live call. Stage A left the live path (Method B fetch →

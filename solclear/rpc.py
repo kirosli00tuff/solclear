@@ -64,29 +64,29 @@ class RatePolicy:
     backoff_cap_s: float = 8.0
 
 
-class HeliusRpc:
-    """Synchronous JSON-RPC client for the four calls Method B needs."""
+class PacedSender:
+    """Pacing + 429-retry engine, shared by the JSON-RPC and Enhanced transports.
+
+    Wraps any zero-argument send callable: enforces the policy's minimum
+    inter-request interval, retries 429 with exponential backoff honouring
+    ``Retry-After``, and redacts transport errors down to a label so the
+    key-bearing URL can never leak into an exception message.
+    """
 
     def __init__(
         self,
-        api_key: str,
-        *,
-        base_url: str = DEFAULT_BASE_URL,
-        timeout_s: float = DEFAULT_TIMEOUT_S,
-        policy: RatePolicy | None = None,
-        transport: httpx.BaseTransport | None = None,
-        sleep: Callable[[float], None] = time.sleep,
-        monotonic: Callable[[], float] = time.monotonic,
+        policy: RatePolicy,
+        sleep: Callable[[float], None],
+        monotonic: Callable[[], float],
     ) -> None:
-        self._client = httpx.Client(base_url=base_url, timeout=timeout_s, transport=transport)
-        self._path = f"/?api-key={api_key}"
-        self._policy = policy if policy is not None else RatePolicy()
+        self._policy = policy
         self._sleep = sleep
         self._monotonic = monotonic
         self._last_request_at = float("-inf")
 
-    def close(self) -> None:
-        self._client.close()
+    @property
+    def policy(self) -> RatePolicy:
+        return self._policy
 
     def _pace(self) -> None:
         if self._policy.min_interval_s <= 0:
@@ -106,22 +106,51 @@ class HeliusRpc:
                 pass
         return backoff
 
-    def _post(self, method: str, params: list[Any]) -> httpx.Response:
+    def send(self, label: str, do_send: Callable[[], httpx.Response]) -> httpx.Response:
         attempt = 0
         while True:
             self._pace()
             try:
-                resp = self._client.post(
-                    self._path,
-                    json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
-                )
+                resp = do_send()
             except httpx.HTTPError as exc:  # redact: httpx messages can embed the URL
-                raise RpcError(f"{method}: transport error ({type(exc).__name__})") from None
+                raise RpcError(f"{label}: transport error ({type(exc).__name__})") from None
             if resp.status_code == 429 and attempt < self._policy.max_retries_429:
                 self._sleep(self._retry_delay_s(resp, attempt))
                 attempt += 1
                 continue
             return resp
+
+
+class HeliusRpc:
+    """Synchronous JSON-RPC client for the four calls Method B needs."""
+
+    def __init__(
+        self,
+        api_key: str,
+        *,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout_s: float = DEFAULT_TIMEOUT_S,
+        policy: RatePolicy | None = None,
+        transport: httpx.BaseTransport | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+        monotonic: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self._client = httpx.Client(base_url=base_url, timeout=timeout_s, transport=transport)
+        self._path = f"/?api-key={api_key}"
+        self._sender = PacedSender(policy if policy is not None else RatePolicy(), sleep, monotonic)
+        self._policy = self._sender.policy
+
+    def close(self) -> None:
+        self._client.close()
+
+    def _post(self, method: str, params: list[Any]) -> httpx.Response:
+        return self._sender.send(
+            method,
+            lambda: self._client.post(
+                self._path,
+                json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
+            ),
+        )
 
     def _call(self, method: str, params: list[Any]) -> Any:
         resp = self._post(method, params)

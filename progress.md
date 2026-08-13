@@ -70,6 +70,143 @@ external measurements not yet taken.*
 ETAs against a measured baseline (Stage B ran ~1.5 h for six tasks): Task 4
 ~25 min, Task 6 ~20 min, report + `make lint/typecheck/test` ~15 min.
 
+## Stage B addendum — results: the scanner fits free tier only at graduation scope, and the 2024 outcome study has no free launch-era price source — 2026-08-13
+
+*Bars registered in de95281. **Zero Helius credits spent** (ledger cumulative
+unchanged at 339); 35 of the budgeted 40 keyless probes. `make lint`,
+`make typecheck`, `make test` (39 passed) green. The registered ETAs held
+(~25/~20/~15 min). No new ADR: nothing here changes an architectural decision —
+it prices one (ADR-003's placeholder weights) and scopes a future stage.*
+
+### Task 4 — scanner cost model (measured 2026-08-13T05:15–05:35Z)
+
+**Population rate, measured not quoted.** GeckoTerminal `new_pools` for
+Solana, 122 unique pools (deduped by id; pages shift under the pager, so
+missed pools bias the rate *down* — conservative) spanning
+05:15:37Z–05:28:09Z against retrieval at 05:35:06Z → **~9,000 new pools/day**
+by the registered formula (the newest−oldest variant gives ~14,000; same
+order). Composition is the finding: **101/122 are pump.fun bonding curves.**
+The AMM-pool subset this scorer actually targets (pumpswap 9,
+meteora-damm-v2 6, meteora 1, raydium 1, fluxbeam 1) is 18/122 ≈
+**~1,330/day**; the pumpswap-only (graduation-proxy) rate is ~665/day.
+
+**Cross-check — a registered >2× disagreement, reported, not averaged.**
+Public 2026 figures put pump.fun graduations at **80–269/day**
+(dextools.io/news/pump-fun-graduation-collapse-solana-fees-2026;
+cryptopolitan.com/pump-fun-token-graduations-six-month-high;
+bitget.com/news/detail/12560605208670 — all retrieved 2026-08-13). The
+sample's 665/day rests on n=9 (Poisson 95% CI ≈ [300, 1,260]) and
+new-pumpswap-pools ⊋ graduations, so the public band is likely nearer the
+truth for graduations specifically.
+
+**Allowance, read from the vendor today** (helius.dev/pricing, 2026-08-13):
+Free **1M credits/month at 10 RPS**; Developer $49/10M; Business $499/100M;
+Professional $999/200M. Per-pool cost: Stage B's measured retrieval figures —
+37.8 typical, 44.8 conservative — used as a **floor** (the parse and
+token-security steps are NOT-WIRED, ADR-004; their cost is unmeasured and not
+projected).
+
+| coverage | pools/day | credits/mo @37.8 | against the free 1M |
+|---|---|---|---|
+| full feed | 9,017 | 10.36M | 9.7% affordable; needs Business $499 (Developer's 10M just misses) |
+| AMM pools only | ~1,330 | ~1.53M | 65% affordable; Developer $49 covers 6.5× |
+| reserve ≥ $10k (4.9% of feed, measured) | ~444 | ~0.51M | fits free, ~2× headroom |
+| pumpswap pools (sample rate) | ~665 | ~0.76M | fits free at 1.3× headroom (0.91M @44.8 — barely) |
+| graduations (public band) | 80–269 | 0.09–0.31M | fits free comfortably |
+
+**The shortfall, plainly:** full-feed continuous coverage is ~10× the free
+tier. The natural scopes for this tool — AMM pools at launch, or graduations
+only — fit the free tier (or $49/mo) **at the retrieval floor only**. And the
+floor caveat is load-bearing, because the same pricing page prices **Enhanced
+Transactions API calls at 100 credits each — 10× the gate's placeholder
+weight of 10** (ADR-003 declared its weights unverified; the vendor figure
+now exists). One enhanced call per pool adds ≥ 100 credits (≥ 3.6× the
+floor); one per launch-window transaction would dominate everything else.
+**The scanner tier decision is therefore not decidable until the wiring stage
+prices the enhanced step** — nothing above should be read as "free tier
+suffices". Rate limit does not bind: even the full feed at ~35 requests/pool
+averages ~3.7 req/s against the free tier's 10 RPS. Credits bind.
+
+Operational note, the same lesson as Stage B's Helius 429s: GeckoTerminal
+429'd mid-run at the registered 2.5 s pacing despite a documented 30/min
+limit; 6 s pacing held. Raw samples preserved in
+`data/vendor/stage_b_addendum_*.json` (machine-local, like the ledger).
+
+### Task 6 — outcome study: identifiers resolve 6/6; launch-era price history exists in no free keyless source measured
+
+**Resolution: 6/6 pre-registered mints resolve to pools with 2024
+`pool_created_at`.** One via DexScreener (7CSWFsrB…pump — the only one still
+carrying liquidity); the other five only via the registered GeckoTerminal
+fallback: **DexScreener's token endpoint has forgotten the dead pairs;
+GeckoTerminal remembers dead pools** and is the resolver a study should use.
+
+**History: the registered bar passes literally — 6/6 span ≥ 30 d and ≥ 90 d
+from the first recorded candle, 3/3 hard_rug included — and the bar was
+mis-specified, which is recorded rather than papered over** (the stage's
+second mis-specified bar, after the depth sub-bar). The study needs
+launch→launch+30/90 d; the first candle sits months to a year after pool
+creation on every one of the six:
+
+| mint | class | pool created | first candle | last candle | daily candles |
+|---|---|---|---|---|---|
+| Hp4XeAZ5… | hard_rug | 2024-05-23 | 2025-03-12 | 2026-07-21 | 65 |
+| UutVe14D… | hard_rug | 2024-05-02 | 2024-09-19 | 2025-08-09 | 4 |
+| 7CSWFsrB… | hard_rug | 2024-10-11 | 2025-03-14 | 2026-08-12 | 57 |
+| CP1KFKft… | honest | 2024-09-25 | 2025-03-14 | 2026-07-21 | 35 |
+| gYgUiBNG… | honest | 2024-07-03 | 2025-04-14 | 2026-07-06 | 18 |
+| 36gmCN9H… | honest | 2024-09-25 | 2025-03-28 | 2026-05-12 | 37 |
+
+**Launch→+90 d coverage: 0/6.** Four of six first candles cluster in
+2025-03-12→28 while creations span May–Oct 2024 — consistent with a rolling
+daily-candle retention horizon (~17 months back from today), though UutV's
+2024-09-19 start shows it is not a hard cutoff, so the mechanism is stated as
+observed, not asserted. What exists is sparse late-life dust trading (4–65
+non-contiguous candles over 300–500-day spans; last closes 1e-6–1e-9 USD —
+all six near-worthless today, the three honest_candidates included, which is
+the scope statement's cleared ≠ safe visible in data).
+
+Consequences, both directions:
+
+- **Retrospective on the 2024 holdout: not feasible from the free keyless
+  sources measured.** DexScreener has no history endpoint and forgets dead
+  pairs; GeckoTerminal's daily OHLCV misses the launch era for this cohort.
+  Paths that exist but were not verified here (accounts/keys needed):
+  reconstruction from on-chain DEX swaps via free-tier SQL warehouses (Dune,
+  Flipside), or paid history (Birdeye). Dead tokens are exactly the outcomes
+  that matter most, so this gap decides the study design, and it is reported
+  as a gap, not smoothed.
+- **Forward, on a live cleared cohort: feasible.** A pool cleared today has
+  its launch inside any plausible retention window, so the same free daily
+  candles cover launch→+90 d (or can be snapshotted as they occur). This
+  converges with FINDINGS.md §3's reopening condition — "a live
+  forward-recorded cohort" — which is now also the affordable outcomes path.
+- **Benchmark leg exists:** Binance public klines, keyless
+  (api.binance.com/api/v3/klines, SOLUSDT daily), verified from 2024-01-01
+  (first close 109.91) — full coverage of any 2024 horizon for the
+  hold-SOL comparison; cash is a constant.
+
+### Open (consolidated; supersedes the Stage B list above)
+
+1. **The live scoring path is NOT WIRED** (ADR-004): T0 acquisition,
+   enhanced-detail client, parse to `features.Tx`, and a token-security
+   source, in that order, before any pool can be scored from the chain.
+2. **An unscoreable pool currently returns a score** (ADR-005): implementation
+   of the refusal is the next code stage's first change.
+3. **The gate's `enhanced` weight (10) is 10× under the vendor's published
+   price (100/call**, helius.dev/pricing, 2026-08-13). Correct it before any
+   enhanced client exists — it under-gates exactly the step about to be
+   built. The ledger records raw counts, so reconciliation needs no history
+   rewrite (ADR-003's design).
+4. Method B rate-limit pacing and the `block_time` error-vs-skipped-slot
+   conflation (Stage B), both unchanged.
+5. **Scanner tier decision deferred** until the enhanced step is priced: at
+   the retrieval floor, graduations-only fits the free tier and the full feed
+   needs ~$499/mo, but the floor is a known underestimate.
+6. **Outcome study**: forward cohort design is the measured-feasible path;
+   the 2024 retrospective needs an on-chain-swap reconstruction source
+   (Dune/Flipside, unverified) or paid history. The behavioural signal stays
+   not shipped (+0.032, CI includes zero), untouched throughout.
+
 ## Stage B — pre-registration: bars for the live end-to-end validation — 2026-08-12
 
 *Committed before any live call. Stage A left the live path (Method B fetch →

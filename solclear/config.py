@@ -29,6 +29,12 @@ STAGE_B_CREDIT_CAP = 400
 # in the registration. Never raised mid-run (ADR-003).
 STAGE_C_CREDIT_CAP = 5_000
 
+# Stage D (2026-08-13) T0-basis resolution cap, registered in progress.md
+# before any Stage D measurement. Total ledger cumulative — 4,220 was already
+# spent at registration, so ~2,980 remains for the stage, sub-budgeted in the
+# registration. Never raised mid-run (ADR-003).
+STAGE_D_CREDIT_CAP = 7_200
+
 
 class MissingSecretError(RuntimeError):
     """A required secret is absent from the environment; names the variable."""

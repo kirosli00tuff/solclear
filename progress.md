@@ -1,5 +1,64 @@
 # progress.md — running log
 
+## Stage D — pre-registration: T0-basis resolution and cohort-window probe — 2026-08-13
+
+*Committed before any Stage D measurement. Disclosure, as always: the
+repository and every prior result — including Stage C.1's indirect evidence
+of a basis mismatch — were read before writing this. The bars below are set
+against measurements not yet taken: the parent's code has not been read, no
+both-anchors comparison exists, and no cohort probe has run.*
+
+### Cap and sub-budgets
+
+- **Stage cap: 7,200 weighted credits total ledger cumulative**
+  (`STAGE_D_CREDIT_CAP`) — opening position 4,220, so ≤ 2,980 for this
+  stage. Every request priced before sending.
+- **Sub-budgets:** Task 2 probes ≤ **200** (DAS `getAsset` priced at the
+  vendor's published 10 credits/call — a new `das` gate weight to be added
+  with a sourced comment; mint-paging probes capped at **15 pages per
+  mint**, so the probe measures cost *scaling* without unbounded spend).
+  Task 3 ≤ **2,600** (retrieval ≤ 500; enhanced ≤ 2,100), pool-anchor
+  pairs processed sparse-first with each pair's full enhanced sweep priced
+  before its first call — a pair that does not fit is skipped and reported.
+  Task 4 is keyless: **zero credits**; ≤ 80 paced HTTP probes. Slack ~180.
+
+### Task 3 materiality threshold (fixed before the comparison exists)
+
+The two anchors are **INTERCHANGEABLE** iff, across every pool compared
+under both anchors: (a) **zero clearance flips** — the `cleared` boolean
+identical wherever both anchors score, and a refusal under one anchor
+matching a refusal with the same reason under the other; (b) |Δ
+clearance_score| ≤ 0.01 on every scored pair; and (c) ≥ 90% of individual
+feature comparisons inside the Stage B tolerance bands
+(`authority_revoked_in_window` exact; counts ± 1; shares ± 0.01 absolute;
+TTFS ± 60 s). Otherwise they are **DISTINCT**, the scanner must anchor at
+token launch, and Task 2's cost becomes a hard input to scanner economics.
+**Minimum decision coverage: ≥ 4 of the 6 pre-registered pools compared
+under both anchors** — below that the stage reports insufficient coverage
+rather than deciding. The threshold is not adjusted after the measurement.
+
+### Stage E go conditions (fixed before the cohort probe)
+
+- **Sample**: 12–16 pools with creation dates spanning 2025-04 → 2026-07,
+  enumerated by a method that includes pools dead today (methods tried in
+  order, the one used recorded); **≥ 30% of the sample must be dead now**
+  (no candle in the last 14 days, or reserve < $1k) — less than that is
+  selection on survival and GO is withheld regardless of other numbers.
+- **GO at horizon H ∈ {30, 90} days** iff: ≥ 80% of the sample resolves;
+  first candle within **3 days** of `pool_created_at` for ≥ 70% of
+  resolved; and ≥ 70% of resolved show either **≥ H/3 daily candles inside
+  days 0..H** or a **terminal-death signature** (last candle inside days
+  0..H closing ≤ 10% of that pool's peak) — observable death counts as
+  coverage, because total loss is the outcome that matters most.
+- **Benchmark leg**: Binance SOLUSDT daily must cover from 90 days before
+  the earliest sampled creation through today.
+- Reported either way: the latest creation date carrying a full realized
+  90 days, and the latest carrying 30.
+
+ETAs (baseline: C.1 held its estimates except enhanced pacing): T1 ~30 m,
+T2 ~25 m, T3 ~45 m, T4 ~40 m, T5 ~35 m. Standing constraints: behavioural
+signal not shipped; MLCryptoEngine is read-only for Task 1.
+
 ## Stage C — pre-registration: bars before the live path is built — 2026-08-13
 
 *Committed before any Stage C code exists and before any live call. Stage C

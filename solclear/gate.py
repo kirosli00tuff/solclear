@@ -40,7 +40,11 @@ LEDGER_NAME = "helius_credit_ledger.jsonl"
 # inherited placeholder of 10, which under-gated by 10x; no enhanced call was
 # ever made under the old weight (the ledger records raw counts per kind, so
 # this is checkable, and reconciliation needs no history rewrite: ADR-003).
-CREDIT_WEIGHTS: dict[str, int] = {"rpc": 1, "enhanced": 100}
+# `das` = 10 per the vendor's published pricing (https://www.helius.dev/pricing,
+# read 2026-08-13: "DAS (Digital Asset Standard) queries use 10 credits");
+# added in Stage D Task 2 for the getAsset mint-creation probe, registered
+# before any DAS call was made.
+CREDIT_WEIGHTS: dict[str, int] = {"rpc": 1, "enhanced": 100, "das": 10}
 
 
 class CreditCapError(RuntimeError):

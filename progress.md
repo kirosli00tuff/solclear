@@ -59,6 +59,141 @@ ETAs (baseline: C.1 held its estimates except enhanced pacing): T1 ~30 m,
 T2 ~25 m, T3 ~45 m, T4 ~40 m, T5 ~35 m. Standing constraints: behavioural
 signal not shipped; MLCryptoEngine is read-only for Task 1.
 
+## Stage D — results: the basis is resolved from the parent's code, the anchors are distinct-by-evidence, and the cohort window is GO — 2026-08-13
+
+*Ledger: opened 4,220, closed **6,782** of the 7,200 cap — 2,562 spent
+(probe phase 140 + a 10-credit failed first DAS call, retrieval 412,
+enhanced 2,000). The cohort probe spent zero credits and ~90 keyless HTTP
+probes against the registered ≤ 80 — an overrun of ~10, declared: two metric
+artifacts found in the first pass required one corrective re-run, and a
+corrected number beats an in-budget wrong one. ETAs: T1–T3 and T5 held;
+T4 ran ~90 m against ~40 (enumeration dead-ends + the corrective re-run).
+`make lint`, `make typecheck`, `make test` green.*
+
+### Task 1 — the training basis, from the parent's code, quoted
+
+- `research/detection/labels.py:81`:
+  `first_ts=_ts(row.get("FIRST_POOL_ACTIVITY_TIMESTAMP"))`
+- report C.22: *"filtering signatures whose blockTime lands in [T0−60s,
+  T0+1800s]"*
+
+**The parent anchored at SolRPDS's first-recorded pool activity with a 60 s
+pre-roll — not at token launch.** The snapshot's negative TTFS values (−58,
+−30, −1) all sit inside [−60, 0]: explained exactly by the pre-roll, and the
+C.1 token-launch hypothesis is **refuted** (ADR-010, superseding ADR-007's
+hypothesis). Measured per mint on all 10 checked: SolRPDS's T0 **lags** true
+pool creation by +18 min to +13.3 d (median ~1.5 h) — an indexing artifact,
+heterogeneous per pool — which is why C.1's pool-creation windows saw launch
+storms where the parent's windows were quiet. The parent's per-mint T0 is
+reachable from solclear at **zero credits** (read-only SolRPDS CSVs in the
+parent repo; extracted to `data/vendor/stage_d_parent_t0.json`).
+
+### Task 2 — token-launch anchoring: not obtainable affordably, and not needed
+
+- **DAS `getAsset`** (10 credits/call, weight added to the gate with the
+  vendor citation before any call): returns **no creation-time field** —
+  the only time-like key is `last_indexed_slot`. The first call cost 10
+  credits to a parameter-shape error that RAISED per the Stage C transport
+  contract; recorded, not hidden.
+- **From-now signature paging** (capped 15 pages/mint so scaling is
+  measured, not suffered): reached the mint's oldest signature on **1 of
+  6** (CP1KFKft, 10 pages); the rest exceeded 15,000 signatures of
+  post-launch depth — cost scales with depth, the exact from-now pathology
+  ADR-002 exists to avoid. One probe defect recorded: gYgU hit
+  end-of-history at page 10 but the harness failed to capture the final
+  batch's timestamp.
+
+Per Task 1, no token-launch source is needed: the reconciliation anchor is
+SolRPDS, free.
+
+### Task 3 — the both-anchors comparison, against the registered threshold
+
+**Formal decision: WITHHELD — coverage 2 of 6 against the registered
+minimum of 4.** Four pairs priced 2,000–11,100 enhanced credits and were
+skipped by the sub-budget before any call. The threshold was not adjusted.
+
+What the two measured pairs (CP1KFKft, gYgUiBNG) show, identically: **7/10
+features in-band — 70% against the registered 90%** — with the out-of-band
+fields the same window-derived trio both times (`creator_allocation_t0`,
+`top5_concentration_wend`, `n_early_holders`) and *different derived
+creators per anchor*. No clearance flip was observable (both anchors refuse
+both pools on absent TTFS, same reason). Window populations across all six
+pools: parent-anchor 1 / 4 / 1,123 / 135 / 221 / 693 signatures vs
+pool-anchor 1,843 / 6,529 / 9,808 / 83 / 1,466 / 1,515 — the anchors select
+different event sets on every pool. **The evidence points DISTINCT; the
+registered rule simply wasn't allowed to rule on two pairs.** ADR-011
+records the consequence: the scanner anchors at pool creation, and holdout
+calibration is not represented as transferring — scores ship
+*anchor-shifted* until the question closes (the two cheapest unmeasured
+pairs price ≈ 4,300 enhanced, a deliberate future spend) or Stage E's own
+outcomes stand in.
+
+Also from this run: the **first wild unparseable payload** (1 of 1,466 in
+gYgU's pool window — 99.93% coverage; archived in the results JSON;
+pipeline-level scoring would refuse it as `parse_incomplete` — the harness
+scored at scorer level to compute both-anchor features, stated). And the
+GoPlus gap for gYgU/UutV/36gm was closed keyless — **UutVe14D reads
+`mintable = 1` today, which by monotonicity proves mintable at launch**:
+the first live leak-free present-now signal observed.
+
+### Task 4 — the retrospective cohort window: GO, with named gaps
+
+Enumeration record (five methods, failures kept — see
+`scripts/stage_d_cohort.py`): GT has no creation sort; the old pump.fun
+host is dead; pump.fun v3's created-ascending list is offset-capped ≈5,000
+(reaches only 2024-Q1); Wayback GT `new_pools` snapshots yielded one usable
+birth capture; **used: Wayback-archived pump.fun per-coin JSONs** (103
+pages, 30 fetched under a fixed seed — each carries its own
+`created_timestamp`, so dead coins are enumerable) plus the birth capture.
+Declared: attention-crawl bias; **no births reachable for 2025-04..08**;
+sample 8 vs the registered 12–16.
+
+Sample: 8 pools, creations 2025-09 → 2026-06, measured via GT daily OHLCV
+(raw candles preserved in the results for recomputation). Two metric
+corrections were made in the declared re-run: GT day-candles are stamped at
+00:00 (day-of-creation candles sit at negative offsets), and coin-sourced
+entries' `created` is the *bonding* start, so horizons anchor at first
+candle ≈ pool birth — the anchor Stage E scores at (bonding→graduation lag
+measured at 104 and 160 d on the two affected coins).
+
+Against the registered go conditions: **resolution 8/8 (1.00 ≥ 0.80 ✓);
+dead-today 4/8 (0.50 ≥ 0.30 ✓ — not survival-selected); first candle
+within 3 d: 6/8 (0.75 ≥ 0.70 ✓; the two misses are graduation lag, their
+pools have birth candles); pool-anchored coverage h30 7/8 (0.88 ≥ 0.70 ✓),
+h90 6/8 (0.75 ≥ 0.70 ✓)** — terminal deaths are observable (one pool died
+at ~day 22 closing ≤ 10% of peak: exactly the outcome class that matters
+most, captured). Latest sampled creation with a full realized 90 d:
+**2026-03-02**; with 30 d: **2026-06-02** (calendar bounds are ~today−90/−30:
+≈ 2026-05-15 and ≈ 2026-07-14). Binance SOLUSDT daily confirmed from
+2025-01-01. **GO at both horizons**, on the measured sample, with the gaps
+above named.
+
+### Decision — Stage E can proceed, and how
+
+**Anchor: pool creation** (ADR-011), scores labeled anchor-shifted, window
+artifacts retained for parent-basis re-scoring. **Cohort: creations from
+2025-09 (earlier if enumeration improves) through ~2026-07**, horizons 30 d
+(creations ≤ ~2026-07-14) and 90 d (≤ ~2026-05-15). **Cost fits the
+two-week constraint**: the tier ladder killed *continuous* scanning, not a
+bounded cohort — at measured per-pool cost (~38 retrieval + ~1,400 enhanced
+typical), a 100-pool retrospective cohort prices ≈ **145k credits, inside
+even the free tier's 1M/month**; the tier decision for continuous scanning
+remains open per ADR-008 and is not needed for Stage E.
+
+### Open (consolidated; supersedes the Stage C.1 list)
+
+1. **Materiality closure**: two more both-anchor pairs ≈ 4,300 enhanced — a
+   deliberate spend when the operator chooses; until then ADR-011's
+   anchor-shifted labeling stands.
+2. **One unparseable payload** archived (gYgU pool window) — vocabulary
+   review against ADR-009 before the Stage E cohort run.
+3. **Cohort enumeration for 2025-04..08** needs a keyed source or a wider
+   archive sweep; the Stage E cohort starts at 2025-09 without it.
+4. Probe-budget overrun (~90 vs ≤ 80) and the two metric corrections are
+   recorded above; the cohort script now preserves raw candles so future
+   metric changes need no re-probing.
+5. The behavioural signal stays not shipped (+0.032, CI includes zero).
+
 ## Stage C — pre-registration: bars before the live path is built — 2026-08-13
 
 *Committed before any Stage C code exists and before any live call. Stage C

@@ -313,3 +313,82 @@ real payloads** (1,561 parsed, 1,197 understood-ignored), so the vocabulary
 covers the wild shapes seen so far; the day it meets one it does not
 understand, the answer is a refusal and a vocabulary extension reviewed
 against this ADR — never a silent drop.
+
+## ADR-010: The snapshot's basis, resolved from the parent's own code — ADR-007's token-launch hypothesis is superseded
+
+**Date:** 2026-08-13 · **Status:** accepted · supersedes the basis hypothesis in ADR-007
+
+**Context.** ADR-007 inferred token-launch anchoring from the snapshot's
+negative TTFS values. Stage D Task 1 read the parent instead of inferring:
+`research/detection/labels.py:81` sets
+`first_ts=_ts(row.get("FIRST_POOL_ACTIVITY_TIMESTAMP"))` — SolRPDS's
+first-recorded pool activity — and the C.22 report fixes the fetch window
+verbatim: *"filtering signatures whose blockTime lands in [T0−60s,
+T0+1800s]"*. The negative TTFS values (−58, −30, −1) all sit inside the
+**60-second pre-roll**; no token-launch anchoring is needed to explain them,
+and the hypothesis is refuted. Measured per mint against GeckoTerminal's
+pool creation on all 10 checked 2024 mints: **SolRPDS's T0 lags true pool
+creation by +18 minutes to +13.3 days** — an indexing artifact of the
+dataset, heterogeneous per pool, not a semantic anchor. That lag is why
+Stage C.1's pool-creation windows saw launch storms (1,466–9,808
+signatures) where the parent's windows were nearly empty (1–1,123 on the
+same mints): the parent's windows started after the rush.
+
+**Decision.** The snapshot's basis is recorded as **SolRPDS
+first-recorded-activity with a 60 s pre-roll**, and the parent's exact
+per-mint T0 is recoverable at zero credits from the SolRPDS CSVs archived in
+the parent repository (`data/vendor/archive/solrpds/`, read-only). Any
+retrospective KAT reconciliation must anchor there — not at token launch,
+not at pool creation. ADR-007's resolver-accuracy measurement stands
+unchanged; only its basis hypothesis is superseded.
+
+**Consequences.** The retrospective KAT is unblocked in principle (the
+anchor is obtainable and free), but the training windows are now known to
+be **lag-heterogeneous** — each starts at whatever moment SolRPDS first
+indexed the pool — which is a property of the training data worth knowing
+before any recalibration argument, and it travels here rather than in a
+footnote. Mint-creation recovery, for completeness (Stage D Task 2,
+measured): DAS `getAsset` returns no creation-time field (10 credits/call,
+flat), and from-now signature paging reaches the mint's oldest signature
+only on shallow histories (1 of 6 inside a 15-page cap; cost scales with
+post-launch depth — the from-now pathology of ADR-002). Neither route is a
+usable token-launch T0 source, and per this ADR none is needed.
+
+## ADR-011: The scanner anchors at pool creation; calibration transfer stays an open, measured question
+
+**Date:** 2026-08-13 · **Status:** accepted
+
+**Context.** The Stage D registration fixed a materiality rule for whether
+the pool-creation and parent anchors are interchangeable, with minimum
+decision coverage of 4 of 6 pools. The measured coverage was **2 of 6** —
+the four other pairs priced 2,000–11,100 enhanced credits and were skipped
+by the sub-budget before any call — so the rule's formal decision is
+**withheld per the registration**. What the two measured pairs show, both:
+7/10 features in-band (aggregate 70% against the registered 90%), with the
+out-of-band fields the same window-derived trio each time
+(`creator_allocation_t0`, `top5_concentration_wend`, `n_early_holders`) and
+different derived creators per anchor. Combined with the window-population
+evidence (parent windows 1–1,123 signatures vs pool windows 1,466–9,808 on
+the same mints), the anchors demonstrably select different event sets. The
+evidence points DISTINCT; the registered bar simply wasn't allowed to rule
+on 2 pairs.
+
+**Decision.** The forward scanner **anchors at pool creation** — the only
+instant observable first-party and live, measured accurate to seconds
+(ADR-007). But the model's holdout calibration (0.984/0.538) **must not be
+represented as transferring to pool-creation windows**: until either the
+materiality question closes on ≥ 4 pairs (the two cheapest unmeasured pairs
+priced ~2,000 and ~2,300 enhanced — a deliberate future spend) or Stage E
+accumulates its own forward outcome data, a pool-creation-window clearance
+is reported as *anchor-shifted* alongside the calibration statement. Stage
+E's design therefore: observe and score at pool creation, retain each
+window's raw artifacts so parent-basis re-scoring stays possible, and let
+the forward cohort's realized outcomes stand in for the calibration the
+snapshot cannot provide on this anchor. This fits the operator's ~two-week
+constraint because outcome accrual starts immediately rather than waiting
+on the basis question.
+
+**Consequences.** No score ships on an anchor the model never saw without
+saying so on the object itself; the cost is one more caveat travelling with
+early Stage E output, which is exactly the honesty the scope statement
+demands.

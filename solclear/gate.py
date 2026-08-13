@@ -33,9 +33,14 @@ from pathlib import Path
 from solclear.config import Settings
 
 LEDGER_NAME = "helius_credit_ledger.jsonl"
-# Request-weighted credits, UNVERIFIED against the dashboard: plain RPC calls
-# are cheap, Enhanced/parsed-history calls are not.
-CREDIT_WEIGHTS: dict[str, int] = {"rpc": 1, "enhanced": 10}
+# Request-weighted credits. `rpc` = 1 matches the vendor's standard-call
+# price. `enhanced` = 100 per the vendor's published pricing (
+# https://www.helius.dev/pricing, read 2026-08-13: "Enhanced Transactions API
+# and Mint API calls are 100 credits") — corrected in Stage C Task 2 from the
+# inherited placeholder of 10, which under-gated by 10x; no enhanced call was
+# ever made under the old weight (the ledger records raw counts per kind, so
+# this is checkable, and reconciliation needs no history rewrite: ADR-003).
+CREDIT_WEIGHTS: dict[str, int] = {"rpc": 1, "enhanced": 100}
 
 
 class CreditCapError(RuntimeError):

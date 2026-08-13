@@ -44,8 +44,9 @@ def test_gate_ledger_survives_a_restart(tmp_path: Path) -> None:
     second = _gate(tmp_path, cap=1_000)
 
     # Assert
-    assert second.spent() == 3 * CREDIT_WEIGHTS["enhanced"] + 5 * CREDIT_WEIGHTS["rpc"]
-    assert second.remaining() == 1_000 - 35
+    spent = 3 * CREDIT_WEIGHTS["enhanced"] + 5 * CREDIT_WEIGHTS["rpc"]
+    assert second.spent() == spent
+    assert second.remaining() == 1_000 - spent
 
 
 def test_many_small_requests_cannot_walk_past_the_cap(tmp_path: Path) -> None:
@@ -63,8 +64,8 @@ def test_many_small_requests_cannot_walk_past_the_cap(tmp_path: Path) -> None:
 
 def test_charge_at_exactly_the_boundary_is_allowed_then_next_refused(tmp_path: Path) -> None:
     # The cap is inclusive: spending TO the cap is permitted, past it is not.
-    gate = _gate(tmp_path, cap=10)
-    gate.charge("enhanced", 1, "exactly the cap")  # 10 weighted
+    gate = _gate(tmp_path, cap=CREDIT_WEIGHTS["enhanced"])
+    gate.charge("enhanced", 1, "exactly the cap")
     assert gate.remaining() == 0
     with pytest.raises(CreditCapError):
         gate.charge("rpc", 1, "past it")

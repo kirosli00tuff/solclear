@@ -429,3 +429,52 @@ refusing — the refusal tests are updated deliberately in the same commit,
 with the vendor-None refusal pinned alongside. The hazard ADR-005 closed
 stays closed: a truncated fetch, a lossy parse, or a missing vendor read
 still cannot produce a number.
+
+## ADR-013: The outcome-basket rules, registered before enumeration, with the venue-migration nuance stated
+
+**Date:** 2026-08-14 · **Status:** accepted
+
+**Context.** Stage E needed basket rules that could not be tuned after
+outcomes were seen. They were registered in the Task 0 commit (8a49833)
+before any enumeration: entry at the day-0 candle close (the first mark
+available after a score exists); equal weight; exit at horizon (30/90 d);
+and the death rule — no candle in the 14 days ending at the horizon, or an
+exit mark below 1% of entry, books **−100%**, because a dust close has no
+exit liquidity and marking to it manufactures an unrealizable recovery.
+Dead pools stay in their baskets.
+
+**Decision.** These rules are the standing outcome-measurement contract.
+One mis-specification surfaced and is recorded rather than patched
+silently: on launch venues (bonding curves), *graduation* moves liquidity
+to a new pool address and would read as death under the rule. Stage E
+audited every launch-venue position keylessly (pump.fun graduation state):
+**0 of 35 had graduated**, so the registered-rule numbers stand unmodified
+for that cohort. Any future cohort containing launch-venue positions must
+stitch the price series across graduation (curve candles then AMM-pool
+candles) before applying the death rule — declared here, in advance, as
+the rule's v2.
+
+**Consequences.** Outcome numbers are comparable across stages because the
+rules cannot drift quietly; the migration audit is now a required step for
+any launch-venue cohort.
+
+## ADR-014: The execution-cost model — 450 bps round trip central, and at measured death rates it does not matter
+
+**Date:** 2026-08-14 · **Status:** accepted
+
+**Context.** Both predecessor trading projects died partly on unmodelled
+execution. External evidence puts all-in Solana memecoin round trips near
+300–600 bps (bot fees, priority fees, slippage, sandwich exposure).
+
+**Decision.** Registered central figure **450 bps round trip, charged
+225 bps per leg** on every memecoin leg of every basket (cleared,
+not-cleared, random alike), with 300 and 600 bps sensitivity bounds; gross
+and net always reported side by side; a death position nets exactly −100%
+(cost cannot deepen a total loss beyond the stake); holding SOL — the
+operator's benchmark — carries no memecoin cost.
+
+**Consequences.** Stage E measured the model's own relevance: with the
+cleared basket at −100% and the not-cleared median at −100%, the 300 vs
+600 bps sensitivity moved nothing — execution cost is immaterial at these
+death rates and cannot be blamed for the negative result. The model stays
+in force for any future cohort where survival rates make it bind.

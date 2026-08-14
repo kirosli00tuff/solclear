@@ -97,6 +97,92 @@ harness recorded the count but not the payload (a defect, recorded); the
 cohort scorer persists unparseable payloads so the ADR-009 vocabulary
 review runs on real objects.
 
+## Stage E — results: NO, and the reason is the population, not the execution — 2026-08-14
+
+**The answer, in one sentence: on this cohort a cleared basket does not
+beat holding SOL — every one of the 18 cleared pools realized −100% net at
+both horizons (all died on their launch venue without graduating, audited,
+not a migration artifact) — and the scorer does not separate outcomes in
+the survivable direction either, because on birth-ordered pools ~97.5% of
+EVERYTHING dies within 30 days and clearance concentrated in exactly that
+population.** The registered underpowered rule also fires (cleared 18 < 20
+at 30 d; 4 at 90 d), so no formal significance is claimed — with every
+comparison at p_raw = 1.0 in the adverse direction, there is nothing
+deflation could rescue anyway.
+
+### Enumeration and its measured bias (the lead, as briefed)
+
+- Birth-ordered first, as registered: **6 distinct Wayback capture
+  timestamps of GT `new_pools` → 40 in-span birth-ordered pools**; 37 more
+  from archived per-coin pages (attention-crawled); the live created-DESC
+  tail yielded 0 (its offset window sits past the span cutoff). Cohort
+  **77** (9 dropped at anchoring) vs the registered target 300 — keyless
+  sources exhausted; the shortfall is an enumeration limit, recorded.
+- **The registered >15 pp bias rule fires at full force**: birth-ordered
+  death rate **97.5%** at 30 d (100% at 90 d) vs attention-crawled
+  **18.75%** (40%) — a ~60–79 pp gap. The headline therefore rests on the
+  birth-ordered subset, and the measured gap is itself a first-class
+  finding: an attention-selected cohort would have manufactured a
+  decent-looking basket out of crawler bias.
+
+### Scoring distribution (Task 2)
+
+18 cleared / 37 not-cleared / 18 skipped at the registered 6,000-credit
+ceiling (**all 18 skips are attention-crawled coins** — attention correlates
+with launch-window volume, the declared composition bias) / 4 refused, all
+`parse_incomplete`. Parse coverage: **54,202 payloads, 8 unparseable
+(99.985%)** — and the ADR-009 review ran on the persisted objects: all 8
+are **SPL BURN transactions**, a precisely-named vocabulary gap (extension
+candidate `burn`; the refusals were correct behaviour). Notable: the
+birth-ordered clearance rate was 45% (18/40) against the registered ~18%
+expectation — the anchor-shift ADR-011 warned about, visible in scoring
+behaviour; and **zero cleared** among the 16 scored graduated
+(attention-crawled) coins. Credits: 60,824 spent, ledger 6,782 → 67,606 of
+the 600,000 cap (~1,031/pool — under the 1,450 estimate; sparse windows
+dominated).
+
+### Outcomes and the three comparisons (Tasks 3–4), gross and net
+
+| | cleared (n=18 @30d, 4 @90d) | not-cleared (n=35 / 28) | SOL same-windows | cash |
+|---|---|---|---|---|
+| 30 d net mean | **−100%** (median −100%, q75 −100%, total-loss 100%, ever-above-entry 0%) | +84.1% (median **−100%**, q75 −86%, total-loss 65.7%) | −0.2% | +0.33% |
+| 90 d net mean | **−100%** | +588.6% (median **−100%**, total-loss 71.4%) | +0.8% | +0.99% |
+
+Gross equals net for the cleared basket (a total loss cannot be deepened);
+the 300/600 bps sensitivity is identical — **at these death rates execution
+cost is immaterial, measured**. The not-cleared means are carried entirely
+by a few attention-crawled survivors over a −100% median — the
+distribution, not the mean, is the object, exactly why the registration
+required it. All comparisons (vs SOL, cash, not-cleared, random)
+p_raw = 1.0 — the cleared basket sits at the very bottom of every draw —
+and all are **declared underpowered per the registered rule**, not
+reported as significant findings in either direction.
+
+### What this establishes for Stage F
+
+The failure is *population mismatch*, not execution: the model was trained
+on SolRPDS-indexed pools — pools that had real liquidity and an indexed
+life — while a birth-ordered feed at pool creation is dominated by
+pre-graduation bonding curves (16/18 cleared were pump.fun curves; 0/35
+audited launch-venue positions ever graduated) whose ~97.5% 30-day death
+rate no launch-window scorer can out-select. The hard-rug clearance
+question does not contain the does-it-even-graduate question. A Stage F
+scanner would have to score the *graduated/AMM* population (the
+training-adjacent one) — where this cohort produced zero clears among
+scored coins, itself the open calibration question of ADR-011.
+
+Standing caveats, unsoftened: scores are anchor-shifted and holdout
+calibration is not claimed to transfer; the cohort starts at 2025-09
+(earlier births unreachable) and is 77 pools against a 300 target; one
+cohort over one regime proves less than it appears to. Artifacts:
+`stage_e_cohort.json`, `stage_e_scores.jsonl`, `stage_e_candles.jsonl`,
+`stage_e_analysis.json`, `stage_e_migration_audit.json` (machine-local).
+ADR-013 (basket rules, incl. the venue-migration nuance the audit ruled
+out here), ADR-014 (execution-cost model). FINDINGS.md §6 records the
+negative. `make lint`, `make typecheck`, `make test` green. ETAs: T1 60→~75 m
+(archive pacing), T2 est 2 h → ~27 m (77 pools, not 300), T3+T4 ~50 m
+including the interrupted-and-resumed candle fetch, T5 ~45 m.
+
 ## Stage D — pre-registration: T0-basis resolution and cohort-window probe — 2026-08-13
 
 *Committed before any Stage D measurement. Disclosure, as always: the

@@ -88,3 +88,39 @@ why it is a correctness fix, not an optimization: on the corrected sample,
 half of a measured behavioural lift disappeared (finding 2). Method B was
 accepted only after matching the from-now walk at Jaccard 1.0 on every pool
 where both reached, at ~33 weighted credits per pool regardless of depth.
+
+## 6. A cleared basket does not beat holding SOL, and the reason is the population (Stage E, 2026-08-14)
+
+Measured on a 77-pool retrospective cohort (creations 2025-09 → 2026-07,
+pool-creation anchoring per ADR-011, all bars pre-registered): **every one
+of the 18 cleared pools realized −100% net at both 30 and 90 days** — all
+died on their launch venue without graduating (audited against venue
+migration: 0 of 35 launch-venue positions ever graduated). Every comparison
+(vs SOL, cash, not-cleared, random) sat at p_raw = 1.0 in the adverse
+direction, and the pre-registered underpowered rule fired (cleared 18 < 20),
+so no significance is claimed either way. Two structural facts carry the
+explanation and outlast the cohort:
+
+- **Birth-ordered new pools die almost regardless of anything**: 97.5% of
+  the birth-ordered subset was dead within 30 days (100% by 90), because a
+  pool-creation feed is dominated by pre-graduation bonding curves. The
+  scorer separates hard rugs from honest launches *among pools with real
+  liquidity* (its training population); it does not and cannot answer
+  does-it-even-graduate. Scanning raw births with it is a category error —
+  the population, not the model, decides the outcome.
+- **Attention-selected enumeration inflates survival by 60–79 percentage
+  points** (attention-crawled sub-sample: 18.75% dead at 30 d vs 97.5%
+  birth-ordered). A cohort built from crawled/listed coins would have
+  manufactured a decent-looking basket out of selection bias alone. Any
+  future outcome study that cannot enumerate births unbiased should not be
+  run.
+
+Also measured in passing: execution cost (300–600 bps round trip) is
+immaterial at these death rates; the parse vocabulary's first real gap is
+SPL `BURN` transactions (8 of 54,202 payloads, refused correctly); and the
+scorer cleared 45% of birth-ordered pools against the ~18% its holdout base
+rates predict — the anchor-shift warning of ADR-011 showing up in scoring
+behaviour. One cohort, one regime, anchor-shifted scores: this finding
+scopes what a scanner must be pointed at (graduated/AMM pools), not whether
+the clearance boundary itself survives — that question is still open at
+ADR-011's calibration caveat.

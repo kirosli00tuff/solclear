@@ -14,9 +14,11 @@ when any of the three registered conditions holds (Stage C Task 0):
 2. **Parse incomplete** — the parse counted transactions it could not
    understand; dropping them silently would be the absence-as-evidence
    failure in new clothes.
-3. **Missing features** — the assembled mapping lacks a required feature;
-   the scorer itself refuses this (ADR-006), so a sentinel-only row can
-   never reach the booster.
+3. **Missing features** — the assembled mapping lacks a required feature
+   whose SOURCE was unavailable (a vendor field the token-security client
+   could not decode); the scorer refuses this (ADR-006). Window features
+   that are None from a COMPLETE window are measured absence, not missing
+   data, and encode to the trained sentinel instead (ADR-012).
 
 The upstream producers arrive in later Stage C tasks: the enhanced-detail
 fetch and parse produce ``txs`` and the :class:`ParseReport`, and the
@@ -32,7 +34,7 @@ from dataclasses import dataclass
 from solclear import metrics
 from solclear.features import Tx, features
 from solclear.method_b import WindowFetch
-from solclear.scorer import Clearance, ClearanceScorer, Unscorable, clearance
+from solclear.scorer import MISSING, Clearance, ClearanceScorer, Unscorable, clearance
 
 
 @dataclass(frozen=True)
@@ -82,8 +84,13 @@ def score_pool(
             missing=(),
             calibration=metrics.calibration_statement(),
         )
-    assembled: dict[str, float | None] = dict(
-        features(txs, float(fetch.t0_s), creator, label_event_s=None)
-    )
+    # ADR-012: both completeness gates passed, so a None window feature is a
+    # MEASURED absence (e.g. the creator never sold) and encodes to the
+    # trained -1.0 sentinel — exactly how the committed matrix encodes it.
+    # Vendor (token-security) None is absent DATA and still refuses below.
+    assembled: dict[str, float | None] = {
+        k: (MISSING if v is None else v)
+        for k, v in features(txs, float(fetch.t0_s), creator, label_event_s=None).items()
+    }
     assembled.update(token_security)
     return clearance(fetch.address, assembled, scorer=scorer)

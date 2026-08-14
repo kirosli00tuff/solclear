@@ -1,5 +1,102 @@
 # progress.md — running log
 
+## Stage E — pre-registration: does a cleared basket beat holding SOL — 2026-08-14
+
+*Committed before any enumeration. The operator's benchmark — holding SOL or
+cash — was chosen before any of this was measured and does not move in this
+stage. Disclosure: all prior results were read; nothing below was set after
+seeing any Stage E measurement, because none exists yet.*
+
+### Cap, cohort, and yield expectation
+
+- **Stage cap: 600,000 weighted credits total ledger cumulative**
+  (`STAGE_E_CREDIT_CAP`); opening position 6,782. Measured per-pool cost
+  ≈ 1,450 (retrieval ~38 + enhanced typical ~1,400), so a 300-pool cohort
+  prices ≈ 435k with headroom for reruns and probes.
+- **Per-pool enhanced ceiling: 6,000 credits** (60 calls, ≤ 6,000-signature
+  windows). Pools above it are recorded with their signature counts and
+  reported as a composition caveat — busy launches correlate with
+  attention/survival, so this skip is a *bias to declare*, never silent.
+- **Target cohort: 300 pools**, creations 2025-09-01 → 2026-07-14.
+  **Underpowered rule: a cleared basket below 20 positions at a horizon is
+  declared underpowered for that horizon rather than reported as a result.**
+- **Registered yield expectation:** with hard rugs near two-thirds among
+  real-liquidity pools and clearance recall 0.538 on the honest class, 300
+  pools should yield a cleared basket near **50–60**. A materially smaller
+  yield is a finding about the tool on this anchor, not a nuisance.
+
+### ADR-012, decided now, before scoring (and grounded in the parent's encoder)
+
+C.1/D measured pool-anchored windows refusing on
+`creator_time_to_first_sell_s = None` — but in a **complete** window
+(reached_t0 true, parse fully accounted), "the creator never sold" is a
+**measured absence**, which the parent's own training encoder maps to the
+−1.0 sentinel (`train.py` maps empty to MISSING; the committed snapshot
+itself carries −1.0 rows for `creator_allocation_t0` and `top5`). Therefore:
+window features that are None from a complete window encode to the trained
+sentinel before scoring; **source unavailability still refuses** —
+truncation, unparseable payloads, and vendor (GoPlus) None are unchanged.
+The refusal tests are updated deliberately in the Task 0 commit. Without
+this correction the registered yield expectation above is unreachable for a
+semantic misclassification, not a property of pools.
+
+### Basket rules (registered in full; not tuned afterwards)
+
+- **Entry**: at the close of the pool's day-0 candle — the first candle
+  whose period ends at or after score time (T0 + 30 min). A scanner cannot
+  buy before it has scored, and daily granularity makes day-0 close the
+  first honestly available mark. No candle within 3 days of creation → the
+  position is unentered and excluded (count reported).
+- **Weighting**: equal, one unit per position.
+- **Exit**: at the last candle with timestamp ≤ entry + H days (H ∈ {30,
+  90}), or earlier under the death rule.
+- **Death rule (registered before any outcome is seen):** a position
+  realizes **−100%** if the pool has no candle in the 14 days ending at its
+  horizon date, **or** its exit mark is **below 1% of entry price** — a
+  1e-9 dust close has no exit liquidity, and marking to it manufactures a
+  recovery that could not be realized. Dead pools stay in the basket with
+  their realized terminal outcome, never dropped.
+- **Cash rate**: 4% annual (≈ +0.33% at 30 d, +0.99% at 90 d).
+
+### Execution cost (registered central figure and sensitivity)
+
+External evidence puts all-in Solana memecoin round trips near 300–600 bps
+(bot fees, priority fees, slippage, sandwich exposure). Registered:
+**central 450 bps round trip, charged 225 bps on entry and 225 bps on
+exit**, on every leg of every basket including the random and not-cleared
+baskets; sensitivity reported at 300 and 600 bps round trip. Gross and net
+reported separately at every comparison so the cost's effect is visible. A
+death position nets exactly −100% (entry cost cannot deepen a total loss
+beyond the stake).
+
+### Trials and deflation
+
+The grid is **2 horizons × 3 comparisons = 6 registered trials** (cleared
+vs SOL, cleared vs cash, cleared vs not-cleared, at 30 d and 90 d, with
+cleared-vs-random as the null for the significance machinery). Sensitivity
+variants (300/600 bps) are direction-checks, not additional trials.
+Significance: bootstrap p-values (10,000 resamples of basket membership
+from the same cohort), **Bonferroni-deflated over 6 trials — the reported
+threshold is p < 0.0083**, and every p is reported deflated and raw. The
+best cell of the grid is never reported without the rest of the grid.
+
+### Enumeration priority and bias measurement (Task 1, registered order)
+
+Birth-ordered Wayback captures of GT `new_pools` first (capture-timestamp
+count and pool yield reported); per-coin archived pages and the live
+pump.fun v3 created-DESC slice (offset-capped to recent weeks;
+birth-ordered, declared) top up. Every pool carries its enumeration source;
+the two sub-samples are compared on death rate, peak-to-last drawdown, and
+survival at each horizon. **A material gap (any of those differing by more
+than 15 percentage points) means the headline rests on the birth-ordered
+subset and the top-up is reported separately.**
+
+ETAs (baseline: Stage C/D actuals): T1 ~60 m, T2 ~2 h wall, T3 ~50 m,
+T4 ~30 m, T5 ~45 m. The archived-unparseable note travels in Task 2: the D
+harness recorded the count but not the payload (a defect, recorded); the
+cohort scorer persists unparseable payloads so the ADR-009 vocabulary
+review runs on real objects.
+
 ## Stage D — pre-registration: T0-basis resolution and cohort-window probe — 2026-08-13
 
 *Committed before any Stage D measurement. Disclosure, as always: the

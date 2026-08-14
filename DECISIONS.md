@@ -392,3 +392,40 @@ on the basis question.
 saying so on the object itself; the cost is one more caveat travelling with
 early Stage E output, which is exactly the honesty the scope statement
 demands.
+
+## ADR-012: Measured absence encodes to the trained sentinel; only source unavailability refuses
+
+**Date:** 2026-08-14 · **Status:** accepted · refines ADR-006's boundary at the pipeline
+
+**Context.** ADR-006 made the scorer refuse any absent-or-None required
+feature. Stages C.1 and D then measured the consequence on real
+pool-anchored windows: every scored pool refused on
+`creator_time_to_first_sell_s = None` — because the creator *did not sell*
+inside a complete window. That is not missing data; it is a measurement
+whose value is "no event". The parent's own encoder settles how such values
+were trained: `train.py` maps empty cells to the −1.0 MISSING sentinel, and
+the committed snapshot carries −1.0 rows for `creator_allocation_t0` and
+`top5_concentration_wend` — the model was *trained on* sentinel-encoded
+measured absence. Refusing it live is a semantic misclassification that
+would refuse most of any real cohort (C.1: 4 of 4) and make Stage E's
+registered yield expectation unreachable for a reason that has nothing to do
+with pools. Decided in the Stage E Task 0 registration, before any
+enumeration or outcome was seen.
+
+**Decision.** In `pipeline.score_pool`, once both completeness gates have
+passed (retrieval reached T0; the parse accounted for every payload), a
+window-derived feature that is None is a **measured absence** and encodes to
+the trained −1.0 sentinel before scoring. **Source unavailability still
+refuses, unchanged**: `reached_t0=False`, any unparseable payload, and a
+vendor (token-security) None all remain `Unscorable` — those are absent
+*data*, not measured absence. The scorer-level boundary of ADR-006 is
+untouched: a caller passing an incomplete mapping still gets a refusal,
+because the scorer cannot see completeness; only the pipeline, which can,
+is entitled to encode.
+
+**Consequences.** An empty-but-complete window now scores as the trained
+all-sentinel row (the same encoding the holdout contains) instead of
+refusing — the refusal tests are updated deliberately in the same commit,
+with the vendor-None refusal pinned alongside. The hazard ADR-005 closed
+stays closed: a truncated fetch, a lossy parse, or a missing vendor read
+still cannot produce a number.

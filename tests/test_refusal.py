@@ -132,10 +132,11 @@ def test_unparseable_transactions_refuse_at_the_pipeline_level() -> None:
     assert verdict.reason == "parse_incomplete"
 
 
-def test_complete_pipeline_input_with_empty_window_still_refuses_on_features() -> None:
-    # An empty-but-complete window parses to no events, so required features
-    # (e.g. creator_allocation_t0) come out None: the SCORER refuses — the
-    # sentinel-only row can never reach the booster.
+def test_empty_but_complete_window_scores_as_the_trained_sentinel_row() -> None:
+    # ADR-012 (updated deliberately from the ADR-006-era refusal): both
+    # completeness gates passed, so "no events" is a MEASURED absence — the
+    # window features encode to the trained -1.0 sentinel, exactly how the
+    # committed matrix encodes such rows, and the pool scores.
     verdict = score_pool(
         fetch=_fetch("pool-empty-window", reached_t0=True),
         txs=[],
@@ -143,9 +144,25 @@ def test_complete_pipeline_input_with_empty_window_still_refuses_on_features() -
         token_security=TOKEN_SECURITY_OK,
         creator="creator",
     )
+    assert isinstance(verdict, sc.Clearance)
+    assert verdict.cleared is False  # the all-sentinel row scores well under threshold
+
+
+def test_vendor_unavailability_still_refuses_through_the_pipeline() -> None:
+    # ADR-012 narrows the refusal, it does not remove it: a token-security
+    # field whose SOURCE was unavailable is absent data, never a measurement.
+    sec: dict[str, float | None] = dict(TOKEN_SECURITY_OK)
+    sec["thook"] = None
+    verdict = score_pool(
+        fetch=_fetch("pool-vendor-gap", reached_t0=True),
+        txs=[],
+        parse_report=ParseReport(total=0, parsed=0, ignored=0, unparseable=0),
+        token_security=sec,
+        creator="creator",
+    )
     assert isinstance(verdict, Unscorable)
     assert verdict.reason == "missing_features"
-    assert "creator_allocation_t0" in verdict.missing
+    assert verdict.missing == ("thook",)
 
 
 # ---------------------- fail-closed known-answer tests ---------------------- #

@@ -35,6 +35,12 @@ STAGE_C_CREDIT_CAP = 5_000
 # registration. Never raised mid-run (ADR-003).
 STAGE_D_CREDIT_CAP = 7_200
 
+# Stage E (2026-08-14) cohort-outcome cap, registered in progress.md before
+# any enumeration. Total ledger cumulative — 6,782 spent at registration.
+# Sized for a 300-pool cohort at the measured ~1,450 credits/pool plus
+# headroom. Never raised mid-run (ADR-003).
+STAGE_E_CREDIT_CAP = 600_000
+
 
 class MissingSecretError(RuntimeError):
     """A required secret is absent from the environment; names the variable."""

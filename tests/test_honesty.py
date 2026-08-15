@@ -1,6 +1,6 @@
 """Honesty tests: the scope cannot erode without breaking the build.
 
-Four guarantees, each pinned independently:
+Five guarantees, each pinned independently:
 
 1. The scope statement — including every measured figure — exists in CLAUDE.md
    AND README.md.
@@ -9,6 +9,16 @@ Four guarantees, each pinned independently:
 3. The documented precision/recall match what the persisted model actually
    produces on the committed holdout — a degraded or swapped model fails here.
 4. The snapshot the holdout rests on is byte-identical to its manifest.
+5. **The measured negatives stay in front** (Stage F): the Stage E outcome
+   result and the ADR-011 anchor-shift statement must both be present in
+   README.md AND FINDINGS.md. Those two results are what stop this tool being
+   misread as a working trade filter, so a future reader — or a future session
+   — must not be able to delete them quietly. Removing either breaks the build
+   exactly as a rug-detection-shaped name does.
+
+The presence checks carry their own canary (``test_the_presence_check_fires``),
+because a check that cannot fail proves nothing — the same discipline
+``tests/test_leakage.py`` applies to its leak detector.
 """
 
 from __future__ import annotations
@@ -18,6 +28,7 @@ from pathlib import Path
 
 import lightgbm as lgb
 import numpy as np
+import pytest
 
 import solclear
 from solclear import metrics, pipeline, train
@@ -33,6 +44,38 @@ SCOPE_SENTENCES = (
     "judged on minority-class precision, never accuracy",
 )
 SCOPE_FIGURES = ("0.984", "0.538", "0.464", "0.574", "98.7")
+
+# ---------------------------------------------------------------------------
+# Guarantee 5 (Stage F): the two negatives that make this tool honest must sit
+# in the public documents, not only in the stage log. Both are load-bearing for
+# a reader who arrives cold:
+#
+#   * Stage E — on a birth-ordered launch cohort every cleared pool went to
+#     zero, so clearance carried no selection value on that population. Without
+#     this, "0.984 precision" reads as a working trade filter. It is not one.
+#   * ADR-011 — live scores are anchor-shifted and the holdout calibration is
+#     not represented as transferring, so a caller running this against the
+#     chain does not inherit the 0.984 figure.
+#
+# The figures are pinned alongside the sentences because a sentence can survive
+# while its number is quietly softened.
+STAGE_E_SENTENCES = (
+    "the 18 cleared pools realized",
+    "Clearance carried no selection value",
+)
+# 97.5% birth-ordered 30-day death rate vs 18.75% attention-crawled: the
+# crawler-bias gap that explains the result and generalizes past this project.
+STAGE_E_FIGURES = ("97.5", "18.75")
+
+ANCHOR_SHIFT_SENTENCES = (
+    "anchor-shifted",
+    "holdout calibration is not represented as transferring",
+)
+
+# Documents that must carry the negatives. CLAUDE.md is deliberately not in
+# this set: it pins the scope statement (guarantee 1), while these two are the
+# public-facing pair a cold reader actually opens.
+NEGATIVE_BEARING_DOCS = ("README.md", "FINDINGS.md")
 
 # Substrings that would read as rug detection / alarm / safety judgment. The
 # scan covers every public name in the API modules; adding such a name anywhere
@@ -63,13 +106,67 @@ def _text(name: str) -> str:
     return " ".join(unquoted.split())
 
 
+def _assert_present(text: str, needles: tuple[str, ...], doc: str, what: str) -> None:
+    """Every needle must survive verbatim in ``text``, or the document eroded."""
+    for needle in needles:
+        assert needle in text, (
+            f"{doc} no longer contains {what}: {needle!r}. This is not a "
+            "formatting failure — it means a measured result or its figure was "
+            "removed or softened. Restore it, or change the pin deliberately "
+            "with an ADR explaining why the claim no longer holds."
+        )
+
+
 def test_scope_statement_exists_in_claude_md_and_readme() -> None:
     for doc in ("CLAUDE.md", "README.md"):
         text = _text(doc)
-        for sentence in SCOPE_SENTENCES:
-            assert sentence in text, f"{doc} lost the scope sentence: {sentence!r}"
-        for figure in SCOPE_FIGURES:
-            assert figure in text, f"{doc} lost the measured figure {figure}"
+        _assert_present(text, SCOPE_SENTENCES, doc, "a scope sentence")
+        _assert_present(text, SCOPE_FIGURES, doc, "a measured figure")
+
+
+def test_stage_e_negative_survives_in_readme_and_findings() -> None:
+    """Stage E's result cannot be deleted without failing the build.
+
+    Every one of the 18 cleared pools realized -100% at both horizons on a
+    birth-ordered cohort, and the crawler-bias gap (97.5% vs 18.75% 30-day
+    death) explains why. A repository that ships the 0.984 figure without this
+    is misleading by omission, so both documents must carry it.
+    """
+    for doc in NEGATIVE_BEARING_DOCS:
+        text = _text(doc)
+        _assert_present(text, STAGE_E_SENTENCES, doc, "the Stage E outcome result")
+        _assert_present(text, STAGE_E_FIGURES, doc, "a Stage E measured figure")
+
+
+def test_anchor_shift_statement_survives_in_readme_and_findings() -> None:
+    """ADR-011's caveat cannot be deleted without failing the build.
+
+    A caller pointing this at the live chain scores pool-creation windows,
+    which is not the anchor the model was trained on, so the holdout
+    calibration is not claimed to transfer. Drop this and the 0.984 figure
+    silently overpromises on every live score.
+    """
+    for doc in NEGATIVE_BEARING_DOCS:
+        text = _text(doc)
+        _assert_present(text, ANCHOR_SHIFT_SENTENCES, doc, "the ADR-011 anchor-shift statement")
+
+
+def test_the_presence_check_fires() -> None:
+    """The canary: a check that cannot fail proves nothing.
+
+    Guarantees 1 and 5 rest entirely on ``_assert_present``. If a future edit
+    made it vacuous — a silent early return, a needle tuple emptied, matching
+    against normalised-away text — every document test above would still pass
+    while protecting nothing. So the detector is itself tested against a
+    document with the claim deliberately removed.
+    """
+    intact = _text("FINDINGS.md")
+    _assert_present(intact, STAGE_E_SENTENCES, "FINDINGS.md", "the Stage E outcome result")
+
+    gutted = intact.replace(STAGE_E_SENTENCES[0], "")
+    assert gutted != intact, "the canary could not remove the sentence; the pin is stale"
+    with pytest.raises(AssertionError):
+        _assert_present(gutted, STAGE_E_SENTENCES, "FINDINGS.md", "the Stage E outcome result")
 
 
 def test_api_exposes_no_rug_detection_shaped_name() -> None:

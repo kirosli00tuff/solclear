@@ -107,11 +107,31 @@ Conventional commits: `<type>: <description>` with type in
 `feat, fix, refactor, docs, test, chore, perf, ci`. Imperative mood, lower
 case, no trailing period. One deliverable or coherent change per commit.
 
+## Project status: CLOSED (2026-08-14, ADR-015)
+
+Stage F shipped this as a documented public artifact. Stage E answered the
+project's terminal question negatively — on a birth-ordered launch cohort every
+one of 18 cleared pools realized −100%, because hard-rug clearance does not
+contain the does-it-even-graduate question — and the project stops there rather
+than producing a second cohort.
+
+**If you are a future session asked to extend this: read ADR-015 first.** The
+outcome question reopens on a genuinely different *population* (graduated/AMM
+pools with real liquidity, enumerated without survivorship bias), never on a
+different model. Retuning the threshold, adding features, or swapping the
+estimator would produce a better-looking number on the same broken population.
+And the negatives in README.md and FINDINGS.md are pinned by
+`tests/test_honesty.py` — deleting one breaks the build, which is the intent,
+not an obstacle to route around.
+
 ## Read these first
 
 - `README.md` — what the tool answers and what it does not.
-- `FINDINGS.md` — the measured negatives; the most useful thing here for
-  anyone extending this work.
-- `DECISIONS.md` — append-only ADR log; read before revisiting any settled
-  question.
-- `progress.md` — where the project is right now.
+- `FINDINGS.md` — the measured negatives with their sample sizes; the most
+  useful thing here for anyone extending this work.
+- `METHOD_B.md` — the reusable retrieval component and its correctness
+  argument.
+- `DECISIONS.md` — append-only ADR log (ADR-001 … ADR-015); read before
+  revisiting any settled question.
+- `progress.md` — where the project is right now (newest stage first).
+- `LICENSE` — MIT, with the not-financial-advice statement attached.

@@ -1,5 +1,143 @@
 # progress.md — running log
 
+*Newest stage first. Within a stage, the pre-registration precedes its results,
+because that is the order they were written in.*
+
+## Stage F — the project is complete — 2026-08-14
+
+**The project is closed.** Stage E answered the question it existed to reach
+and answered it negatively; Stage F ships the work as a documented public
+artifact with the negatives in front, and extends nothing. **No new capability
+was built and zero credits were spent** — every figure published in this stage
+was already recorded.
+
+### What this project established
+
+- **A hard-rug clearance boundary exists at launch and is measurable**:
+  0.984 precision at 0.538 recall on a 2024 time-split holdout (n = 194), from
+  pre-event launch-window state only. This is the one positive result, and it
+  is recomputed from the committed model and matrix on every test run.
+- **Depth-independent historical retrieval is achievable and necessary.**
+  Method B costs ~33–38 weighted credits per pool regardless of depth and
+  matched the naive walk at Jaccard 1.0 where both reached. Necessary, not
+  merely cheaper: the naive from-now walk excluded 57% of the honest class
+  (n = 14), and correcting that bias erased half of a previously measured
+  behavioural lift.
+- **Refusal can be structural rather than documentary.** A pool that cannot be
+  honestly scored returns a type carrying no number, so a truncated fetch
+  cannot be misread as weak clearance. On first live contact all four pools
+  refused, correctly (Stage C.1).
+- **Enumeration bias dominates memecoin outcome studies.** Birth-ordered pools
+  died at 97.5% within 30 days (n = 40) against 18.75% for attention-crawled
+  (n = 16) — a 60–79 point gap produced by nothing but which pages a crawler
+  archived. This is the most transferable thing the project produced.
+- **Clearance does not select things that go up.** Every one of the 18 cleared
+  pools realized −100% at both horizons on a birth-ordered cohort, and the
+  cause is population mismatch: hard-rug clearance does not contain the
+  does-it-even-graduate question.
+
+### What this project did not establish
+
+- **That a cleared pool is safe.** The honest-versus-soft/slow-rug boundary was
+  measured absent at T0+30min (0.574 against a 0.500 base rate, n = 194), with
+  three controls making it signal-absent rather than sample-limited.
+- **That the holdout calibration transfers to a live anchor.** The materiality
+  question closed at 2 of 6 pairs against a registered minimum of 4; the bar
+  was withheld rather than bent. Scores ship anchor-shifted (ADR-011), and the
+  two cheapest unmeasured pairs still price ~4,300 enhanced credits.
+- **That the post-launch behavioural signal is real.** +0.032, SE 0.039, 95%
+  CI [−0.045, +0.109] — not shipped, across every stage.
+- **Anything about the graduated/AMM population**, which is the
+  training-adjacent one. This cohort produced zero clears among 16 scored
+  graduated coins; that is a fact about 16 coins, not a result.
+
+### What would reopen the outcome question
+
+**A genuinely different population — not a different model.** Specifically:
+graduated or AMM pools carrying real liquidity, enumerated without survivorship
+bias. The enumeration is the hard part and must come first, because the 60–79
+point crawler-bias gap means a cohort drawn from archived or listed coins
+manufactures a decent-looking basket out of selection bias alone. A successor
+that cannot enumerate births unbiased should not run the study at all.
+Retuning the threshold, adding features, or swapping the estimator addresses
+none of this, and would produce a better-looking number on the same broken
+population. Recorded as ADR-015.
+
+### Deliverables
+
+1. **README.md rewritten for a cold reader** — what it answers and does not,
+   before any capability description; ADR-011's anchor shift and Stage E's
+   outcome sitting high rather than buried; the base rate and what it implies;
+   the credit reality (~1,450 credits/pool all-in, ~690 pools/month against a
+   free 1M tier) stated before a reader spends anything.
+2. **FINDINGS.md completed with sample sizes attached to every claim**, led by
+   the Stage E outcome and the crawler-bias measurement, and reordered — the
+   old→new section map sits in that file's header, because DECISIONS.md is
+   append-only and cites it by number.
+3. **METHOD_B.md** — Method B documented as a standalone reusable component,
+   with the correctness argument rather than only the algorithm.
+4. **Honesty tests extended and still load-bearing** — the Stage E result and
+   the ADR-011 anchor-shift statement must now be present in both README.md
+   and FINDINGS.md, with a canary asserting the presence-checker itself fires.
+5. **Usable by someone else**: MIT `LICENSE` with the not-financial-advice
+   statement attached; `pyproject.toml` metadata corrected from `Proprietary`;
+   install, minimal usage example and full suite verified from a clean
+   checkout (`uv sync` clean, suite green, the example scores a real holdout
+   row and demonstrates the refusal, no key needed).
+6. **Secret hygiene re-verified**: `.env` gitignored and untracked; no
+   key-shaped string in any tracked file or anywhere in `git log -p --all`;
+   `.env.example` lists `SOLCLEAR_HELIUS_API_KEY` with no value — and a blank
+   value now counts as absent, so copying the template and running fails fast
+   naming the variable instead of sending unauthenticated requests. That is
+   the one behavioural change in this stage, and it carries tests.
+
+### The credit ledger's final position
+
+**67,606 weighted credits, cumulative, across 5,173 metered requests** —
+4,536 `rpc` (4,536 credits), 630 `enhanced` (63,000), 7 `das` (70). Every one
+priced before it was sent against an append-only on-disk ledger; no refusal
+ever wrote a row. Per stage: A/B 339 → C.1 4,220 → D 6,782 → E 67,606 → **F
+67,606, unchanged**. The gate fired as designed throughout — three pools
+skipped by sub-budget in Stage C.1 and 18 by the per-pool ceiling in Stage E,
+each priced before its first call rather than truncated mid-fetch.
+
+### Verification
+
+`make lint` (40 files formatted, all ruff checks passed), `make typecheck`
+(mypy --strict, 34 source files, no issues) and `make test` (**97 passed**, up
+from 90 — +3 honesty, +4 config/secret) all green. Two things were verified by
+running them rather than by assertion:
+
+- **From a clean checkout** (tracked files only, no `.env`): `uv sync --group
+  dev` resolved clean, the full suite passed, and a minimal usage example
+  scored a real holdout row (`0.4978`, `cleared=False` — matching the
+  documented known-answer for that pool) and demonstrated the empty-mapping
+  refusal, with no API key present. Both the missing-key and blank-key paths
+  raised `MissingSecretError` naming the variable.
+- **The new honesty pins fail when a negative is deleted.** Each class was
+  mutated in a scratch copy and the build broke as designed: removing the
+  Stage E sentence from README.md, removing the ADR-011 anchor-shift statement
+  from FINDINGS.md, and changing the 18.75 crawler-bias figure each produced a
+  named assertion failure. This matters because the test's document reader
+  folds hard-wrapping — a check that passes for the wrong reason would have
+  been indistinguishable from one that works.
+
+ETAs (estimated T1 35 m, T2 40 m, T3 30 m, T4 30 m, T5 45 m, T6 35 m ≈ 3 h
+35 m): held. T5 absorbed the most unplanned work — the blank-key defect and
+the clean-checkout run — and T4 gained the mutation checks above, which were
+not in the estimate and were worth the time.
+
+### Standing items, left open deliberately
+
+1. ADR-011 materiality: ~4,300 enhanced credits for the two cheapest unmeasured
+   both-anchor pairs. Open, priced, and needed by nothing that ships.
+2. SPL `BURN` parse vocabulary gap (8 of 54,202 payloads). Refused correctly;
+   an extension would be reviewed against ADR-009, never slipped in under a
+   closing commit.
+3. The behavioural signal stays not shipped.
+4. Cohort enumeration before 2025-09 needs a keyed source or a wider archive
+   sweep.
+
 ## Stage E — pre-registration: does a cleared basket beat holding SOL — 2026-08-14
 
 *Committed before any enumeration. The operator's benchmark — holding SOL or

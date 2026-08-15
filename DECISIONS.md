@@ -478,3 +478,78 @@ cleared basket at −100% and the not-cleared median at −100%, the 300 vs
 600 bps sensitivity moved nothing — execution cost is immaterial at these
 death rates and cannot be blamed for the negative result. The model stays
 in force for any future cohort where survival rates make it bind.
+
+## ADR-015: The project closes as a documented public artifact; reopening requires a different population, not a different model
+
+**Date:** 2026-08-14 · **Status:** accepted · closes the project
+
+**Context.** Stage E asked the question this project existed to reach — does a
+cleared basket beat holding SOL — and answered it negatively on a
+pre-registered 77-pool cohort: **every one of the 18 cleared pools realized
+−100% at both horizons**, with every comparison at p_raw = 1.0 in the adverse
+direction and the registered underpowered rule fired. The mechanism was
+identified and is structural rather than incidental: hard-rug clearance does
+not contain the does-it-even-graduate question, and a birth-ordered
+pool-creation feed is dominated by pre-graduation bonding curves that die at
+~97.5% within 30 days regardless of any launch-window score. The scorer
+detects hard rugs on the population it was trained on; it does not select
+things that go up.
+
+Two options existed. Continue — build a graduated/AMM-population scanner,
+close the ADR-011 materiality question at ~4,300 enhanced credits, extend the
+parse vocabulary for SPL `BURN` — or stop and ship what was measured. The
+measurements do not need any of that work to be true, and none of it would
+change the negative already recorded; it would only produce a second cohort.
+
+**Decision.** The project is **closed as a documented public artifact**. Stage
+F built no new capability and spent no credits. What it did instead:
+
+1. **The negatives lead.** README.md opens with what the tool answers and what
+   it does not, and carries the two results a cold reader must have before any
+   capability description — ADR-011's anchor shift (live scores do not inherit
+   the 0.984 figure) and Stage E's outcome. FINDINGS.md carries every claim
+   with its sample size in the same sentence as its number.
+2. **The negatives are load-bearing in the build.** `tests/test_honesty.py`
+   now pins the Stage E result and the ADR-011 anchor-shift statement in
+   **both** README.md and FINDINGS.md, alongside the existing scope pins, with
+   a canary asserting the presence-checker itself fires. Deleting a negative
+   breaks the build exactly as a rug-detection-shaped name does — a future
+   reader, or a future session, cannot quietly remove what makes the tool
+   honest.
+3. **Method B is documented as a standalone reusable component**
+   (`METHOD_B.md`), because it is the piece most useful to anyone else and its
+   justification is a correctness argument, not a performance one.
+4. **MIT licensed** (`LICENSE`), with the not-financial-advice statement
+   attached to the licence itself, and `pyproject.toml` metadata corrected
+   from `Proprietary` to match. Installation, a minimal usage example, and the
+   full suite were verified from a clean checkout.
+5. Two smaller items were fixed rather than left for a reader to discover: a
+   blank `SOLCLEAR_HELIUS_API_KEY` now counts as absent (copying
+   `.env.example` to `.env` and running previously produced `SecretStr('')`
+   and unauthenticated requests instead of the promised fail-fast), and
+   FINDINGS.md's section numbering changed, so the old→new map is recorded in
+   that file's header because this log is append-only and cites it by number
+   (ADR-002's "§5" is unchanged; ADR-010's "§3" is now §8).
+
+**The reopening condition, stated so it is not mistaken for pessimism.** The
+outcome question reopens on a **genuinely different population** — graduated
+or AMM pools carrying real liquidity, enumerated without survivorship bias —
+**not on a different model**. Stage E's own crawler-bias measurement (97.5%
+birth-ordered vs 18.75% attention-crawled 30-day death, a 60–79 point gap)
+shows why the enumeration is the hard part and why it must come first: a
+cohort built from archived or listed coins would manufacture a decent-looking
+basket out of selection bias alone. Any successor that cannot enumerate births
+unbiased should not run the study at all. Retuning thresholds, adding
+features, or swapping the estimator addresses none of this, and would produce
+a better-looking number on the same broken population.
+
+**Consequences.** The repository ships one measured capability, a set of
+measured negatives, and no promise it did not test. Nothing is left in a state
+where a future reader could mistake an unfinished path for a working one: the
+behavioural signal stays not shipped (+0.032, CI includes zero), the ADR-011
+materiality question stays open with its price attached (~4,300 enhanced
+credits for the two cheapest pairs), and the SPL `BURN` vocabulary gap stays
+recorded as a correct refusal rather than patched under a closing commit. The
+cost of closing here is that the graduated-population question goes
+unanswered; the cost of not closing would have been shipping a second cohort
+as though it were a different answer.

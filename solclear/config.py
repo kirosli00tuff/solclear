@@ -66,8 +66,15 @@ class Settings(BaseSettings):
     data_root: Path = Path("data")
 
     def require_helius_key(self) -> SecretStr:
-        """The key, or a refusal naming the variable. Never returns None."""
-        if self.helius_api_key is None:
+        """The key, or a refusal naming the variable. Never returns None or blank.
+
+        A blank value counts as absent. ``.env.example`` ships the variable
+        with no value, so the natural first move — copy it to ``.env`` and run
+        — would otherwise yield ``SecretStr('')`` and send unauthenticated
+        requests that fail later with a vendor error. Failing fast, naming the
+        variable, is this accessor's entire purpose.
+        """
+        if self.helius_api_key is None or not self.helius_api_key.get_secret_value().strip():
             raise MissingSecretError(["SOLCLEAR_HELIUS_API_KEY"])
         return self.helius_api_key
 

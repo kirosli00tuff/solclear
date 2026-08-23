@@ -231,7 +231,7 @@ It also carries its own canary: a test that the presence-checker actually fails
 when a required sentence is removed, because a check that cannot fire proves
 nothing.
 
-## Status: closed
+## Status: closed (re-closed 2026-08-22)
 
 This project is complete and is not being extended. It established that the
 hard-rug clearance boundary is real and measurable on the population it was
@@ -241,13 +241,23 @@ graduated/AMM pools with real liquidity, enumerated without survivorship bias �
 not a different model. See the closing entry in [progress.md](progress.md) and
 ADR-015 in [DECISIONS.md](DECISIONS.md).
 
+It reopened once, briefly and on purpose. **Stage G (2026-08-22) settled the two
+questions ADR-015 left standing because they were priced out rather than
+answered**, and re-closed. Both came back negative for the tool and positive for
+the record: the anchor-materiality ruling closed **DISTINCT** at full registered
+coverage, so the anchor-shifted caveat is now measured rather than
+precautionary; and the confirmation that would move the behavioural signal off
+*not shipped* re-priced at **4,695,489** weighted against a 745,915 bar, so it
+stays unbought and the signal stays not shipped. No new capability was built and
+no bar was moved. See ADR-016 and ADR-017.
+
 ## Read next
 
 - **[FINDINGS.md](FINDINGS.md)** — the measured negatives, every claim with its
   sample size. The most useful thing in this repository for anyone extending
   this work.
 - **[METHOD_B.md](METHOD_B.md)** — the reusable retrieval component.
-- **[DECISIONS.md](DECISIONS.md)** — append-only ADR log (ADR-001 … ADR-015).
+- **[DECISIONS.md](DECISIONS.md)** — append-only ADR log (ADR-001 … ADR-017).
 - **[progress.md](progress.md)** — the full stage-by-stage record, including
   every pre-registration written before its results existed.
 

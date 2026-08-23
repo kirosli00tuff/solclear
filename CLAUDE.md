@@ -107,13 +107,29 @@ Conventional commits: `<type>: <description>` with type in
 `feat, fix, refactor, docs, test, chore, perf, ci`. Imperative mood, lower
 case, no trailing period. One deliverable or coherent change per commit.
 
-## Project status: CLOSED (2026-08-14, ADR-015)
+## Project status: CLOSED (2026-08-14, ADR-015; re-closed 2026-08-22, ADR-016/017)
 
 Stage F shipped this as a documented public artifact. Stage E answered the
 project's terminal question negatively — on a birth-ordered launch cohort every
 one of 18 cleared pools realized −100%, because hard-rug clearance does not
 contain the does-it-even-graduate question — and the project stops there rather
 than producing a second cohort.
+
+**Stage G (2026-08-22) reopened it for exactly two confirmations and re-closed
+it.** Both were items ADR-015 left standing *because they were priced out, not
+because they were answered*, and both are now settled:
+
+- **The anchor-materiality ruling closed DISTINCT at 6 of 6 pairs** against the
+  unaltered Stage D threshold (43 of 60 feature comparisons in band against a
+  registered ≥ 90%). ADR-011's decision is unchanged and now measured: scores
+  ship anchor-shifted as a fact, not a precaution. ADR-016.
+- **The decon-unbiased confirmation re-priced at 4,695,489 weighted**, 37.6× the
+  parent's stale 124,764, against a registered 745,915 affordability bar: NO-GO.
+  The behavioural signal stays not shipped and its confirmation bars, registered
+  in full before the price was known, stand unexercised. ADR-017.
+
+Stage G built no new capability and moved no bar. Both remaining standing items
+are now closed with numbers rather than left open with prices.
 
 **If you are a future session asked to extend this: read ADR-015 first.** The
 outcome question reopens on a genuinely different *population* (graduated/AMM
@@ -131,7 +147,7 @@ not an obstacle to route around.
   useful thing here for anyone extending this work.
 - `METHOD_B.md` — the reusable retrieval component and its correctness
   argument.
-- `DECISIONS.md` — append-only ADR log (ADR-001 … ADR-015); read before
+- `DECISIONS.md` — append-only ADR log (ADR-001 … ADR-017); read before
   revisiting any settled question.
 - `progress.md` — where the project is right now (newest stage first).
 - `LICENSE` — MIT, with the not-financial-advice statement attached.

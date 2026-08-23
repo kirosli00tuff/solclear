@@ -264,6 +264,237 @@ on a no-go at Task 2, ≈ 8 h if the confirmation runs. Baseline: Stage F's
 estimates held; Stage D's Task 4 overran ~90 m against ~40 m on enumeration
 dead-ends, which is the failure mode to watch here too.
 
+## Stage G — results: both post-closure questions answered; the artifact re-closes — 2026-08-22
+
+**The two items ADR-015 left standing because they were priced out, not
+answered, are now closed with numbers.** The anchor-materiality ruling closed
+**DISTINCT** at full registered coverage, and the decon-unbiased confirmation
+re-priced at **4,695,489 weighted** against a registered 745,915 bar — **NO-GO**,
+so Task 3 never ran. No new capability was built, no bar was moved, and the
+behavioural signal is exactly where Stage F left it: **not shipped**.
+
+*Ledger: opened 67,606, closed **92,274** — **24,668 spent, 4.9% of the 500,000
+stage allowance** and 2.6% of the 932,394 the vendor had left in the cycle. The
+stage cap (567,606 cumulative) was never approached, and the two registered
+sub-budgets both held: Task 1 spent 22,401 of ≤ 25,000, Task 2's probe 2,267 of
+≤ 2,500 (the guard stopped the extension mid-list, as designed). ETAs: T0, T1 and
+T4 held; T2 ran ~110 m against ~60 m, all of it in the declared probe extension
+below. `make lint`, `make typecheck`, `make test` green.*
+
+### Task 0 — everything registered before the first call
+
+Committed as `e9ba1bb` before any Stage G request: the vendor position, the
+stage cap, the anchor verdict procedure quoted verbatim from Stage D, the decon
+confirmation bars in full with both anchor branches, the not-shipped rule, the
+refusal-reporting rule, the affordability rule, and the trial accounting. The
+pre-registration sits immediately above this entry.
+
+One thing that registration bought outright: **the decon bars were fixed before
+the price was known, so the NO-GO could not be read as convenient.** They stand
+unexercised, which is a different thing from unwritten — any future attempt
+inherits them already fixed.
+
+### Task 1 — the anchor ruling: DISTINCT, 6 of 6 (ADR-016)
+
+The four pairs Stage D skipped were bought and scored under both anchors.
+Re-pricing before sending reproduced Stage D's prices **exactly** — 2,000 /
+2,300 / 6,700 / 11,100 enhanced — which is a small known-answer result in its
+own right: historical windows are stable, so a price quoted eight days ago is
+still the price.
+
+| pool | parent-anchor sigs | pool-anchor sigs | in band | priced |
+|---|---|---|---|---|
+| CP1KFKft (Stage D) | 135 | 83 | 7/10 | 200 |
+| gYgUiBNG (Stage D) | 221 | 1,466 | 7/10 | 1,800 |
+| Hp4XeAZ5 | **1** | 1,843 | 7/10 | 2,000 |
+| 36gmCN9H | 693 | 1,515 | 8/10 | 2,300 |
+| UutVe14D | **4** | 6,529 | 7/10 | 6,700 |
+| 7CSWFsrB | 1,123 | 9,808 | 7/10 | 11,100 |
+
+**Verdict: DISTINCT**, coverage 6 of 6 against a registered minimum of 4.
+Against the three registered criteria: (a) zero clearance flips — passed
+**vacuously**, because no pool is scorable under *either* anchor (all six refuse
+on `creator_time_to_first_sell_s`) and both sides merely matched
+`missing_features` to `missing_features`; (b) |Δ score| ≤ 0.01 — **vacuous**,
+zero scored pairs; (c) ≥ 90% of feature comparisons in band — **fails at 43 of
+60 (71.7%)**.
+
+**So the verdict rests entirely on criterion (c), and that is recorded rather
+than dressed up as three-way agreement.** The failure is structured: the same
+window-derived fields fall out of band every time — `top5_concentration_wend`
+**6 of 6**, `n_early_holders` **6 of 6**, `creator_allocation_t0` **5 of 6** —
+the identical trio Stage D saw on two pairs. Underneath all three is one
+mechanism: **the parse derives a different creator under each anchor on 6 of 6
+pools.** A window opening at a different instant has a different first actor in
+it, and every creator-relative and holder-set feature moves with that.
+
+Recorded as a limit: a both-anchor pair that actually *scores* under both
+anchors still has not been observed, so the strongest possible evidence — a
+measured clearance flip — is not among what was collected. 71.7% against 90% is
+not a near miss, but a reader is entitled to know which criteria could speak.
+
+Consequence: ADR-011's decision is **unchanged and now measured rather than
+precautionary**. The scanner anchors at pool creation; holdout calibration is
+still not represented as transferring; scores still ship *anchor-shifted* — and
+README.md and FINDINGS.md now say that shift is a measured fact at full
+registered coverage, with the honesty tests pinning the verdict and its 43-of-60
+margin in both documents, extended in the same commit as the text.
+
+Free by-product, closing an assertion with evidence: a live Helius JSON-RPC
+response carries **no credit-, quota-, usage- or limit-bearing header of any
+kind**. `gate.py` says the vendor exposes no usage figure and cost must
+therefore be derived from request counts; that is now measured, not assumed.
+
+### Task 2 — the decon re-price: 4,695,489, NO-GO (ADR-017)
+
+**Population** — the honest class of the parent's committed `behavior_c25.csv`,
+**328 pools**, with pool address and T0 resolved from the archived SolRPDS CSVs
+at **zero credits, 328 of 328**. Composition reported as measured: 162
+`c24_overlap` (all carrying decon labels already) + 166 `c25_deep` (none), across
+2021 (15) / 2022 (15) / 2023 (45) / 2024 (253).
+
+One divergence from the parent's own report, reported rather than reconciled
+away: C.26 states "447 in the sample" — 328 honest + 119 hard rugs — but the
+committed matrix holds **422 rows, 328 honest + 94 hard rugs**. Twenty-five
+hard-rug rows in the report's count are not in the persisted file. It does not
+touch this pricing (the decon test reclassifies only the honest class), but a
+future reader joining against that matrix should know the counts differ.
+
+**Request plan** — per pool, enhanced detail over `(T0 + 1800 s, T0 + 30 d]` on
+the **pool** address, the horizon `decontaminate()` needs to see insider sells,
+at `ceil(signatures / 100) × 100` weighted plus Method B retrieval. The weight
+correction alone (10 → 100 credits per call) is ×10 by arithmetic and would put
+the parent's own plan at 1,247,640. The measurement says the plan itself was
+wrong.
+
+**Measured, not extrapolated: 43 pools probed, 30-day pool-address signature
+counts read off the chain.**
+
+| | measured |
+|---|---|
+| 30-day pool-address signatures | 0 → ≥ 150,000, **median 661** |
+| enhanced credits per pool | min 0, p25 200, **median 700**, mean **15,170**, p75 9,100, p90 46,100, max ≥ 150,000 |
+| stratum means × population | low 13,581 × 108, mid 22,675 × 110, high 6,564 × 110 |
+| **corrected total** | **4,695,489** weighted (4,683,025 enhanced + 12,464 retrieval) |
+| 95% bootstrap interval | [1,908,852, 8,138,152] |
+
+Two pools hit the 150-page probe cap, so their costs and the total are
+**floors**. The median pool is nearly free and the mean is 21× the median: the
+bill is set entirely by a tail.
+
+**Why the correction is 37.6× and not 10×.** The weight was one error; the cost
+model was the larger one. The parent stratified per-pool cost on the 6h
+transaction count in `behavior_c25.csv`, which was measured by walking the
+**mint**, while the cost is incurred on the **pool**. Measured over 43 pools the
+rank correlation between the two is **+0.038 — none**. The consequences show up
+directly: the high-activity tercile priced **cheapest**, and one pool with
+**38,455 mint transactions in its first six hours carried zero pool-address
+signatures across the whole 30-day horizon** (its address does hold history —
+newest signature 2026-05-14 — so this is an anchor/address mismatch of exactly
+the kind Task 1 just measured, not a resolution gap; included at its measured 0,
+which lowers the estimate). "53 thriving pools at ~2,000 each dominate" was a
+reasonable model of the wrong quantity.
+
+**Against the registered bar: NO-GO.** The total had to fit under both the
+remaining stage allowance (475,332) and 80% of the vendor's remaining monthly
+balance (745,915). It exceeds them by ~10× and ~6×, and **even the interval's
+lower bound of 1,908,852 exceeds them by 4.0× and 2.6×** — the decision does not
+rest on the estimator's uncertainty. Task 3 does not run.
+
+**A declared deviation.** The registration fixed a **12-pool** probe. It returned
+5,108,814 with a bootstrap interval of **[366,564, 13,252,764]** — straddling the
+threshold, ~10% of draws below it. An interval that spans the bar cannot decide,
+so the probe was extended to **43 pools inside the registered 2,500-credit
+sub-budget, which was not exceeded**, with the original twelve draws left exactly
+as drawn and the extension sampling the remainder under its own seed. **The
+registered affordability bar was not touched.** The trigger was a stated property
+of the *input* — an interval spanning the threshold — not which side the point
+estimate fell on, and extending could have moved the answer either way. It moved
+it down slightly (5.11M → 4.70M) and made it decisive. Recorded here and in
+ADR-017 rather than smoothed over, because the reason a probe grew is exactly
+the kind of thing that gets lost.
+
+### Task 3 — not run, by the registered rule
+
+The affordability rule fired NO-GO at Task 2, and the registration said in
+advance that the stage ends there as a valid outcome. **The decon confirmation
+bars registered in Task 0 stand unexercised.** They are not withdrawn and not
+softened: the estimator, the strata, the noise floor, the answerable-cell floor,
+the interval construction, both anchor branches, the refusal classes, the 20%
+material-reduction threshold, and the rule for what would change the
+behavioural signal's not-shipped status are all fixed in the pre-registration
+above, so a future attempt inherits them rather than choosing them.
+
+**The behavioural signal remains not shipped** (+0.032, 95% CI [−0.045, +0.109]),
+unchanged in every document.
+
+### Task 4 — re-close
+
+- **FINDINGS.md**: §4 records the anchor ruling as closed DISTINCT at 6 of 6 with
+  its 43-of-60 margin and the vacuous-criteria caveat; §8 is rewritten around the
+  corrected 4,695,489 and the wrong-address diagnosis, replacing the 124,764
+  framing; the glance table and the header's provenance line follow.
+- **README.md**: the anchor section says the shift is measured, not
+  precautionary; the behavioural-signal row now carries the corrected price of
+  the confirmation that stays unbought; the status section records the reopen
+  and the re-close.
+- **CLAUDE.md**: the status block records the re-closure and both outcomes, so a
+  future session reads them before extending anything.
+- **DECISIONS.md**: ADR-016 (the anchor verdict) and ADR-017 (the decon
+  re-price), both appended, neither editing an earlier record.
+- **tests/test_honesty.py**: two new pins — the anchor verdict with its 43-of-60
+  margin, and the corrected 4,695,489 — each required in **both** README.md and
+  FINDINGS.md. 99 tests, up from 97.
+
+**The new pins were verified by mutation, and the first attempt at that
+verification was wrong in a way worth recording.** Removing a needle from a
+scratch copy and re-running the suite initially reported *pass* for two of the
+eight cases — not because the pins were vacuous, but because the mutation was:
+`str.replace(needle, "", 1)` left a second occurrence of `4,695,489` standing in
+README.md, and `the anchors are measured DISTINCT` is **hard-wrapped** in the
+raw file, so a raw-text replacement never matched it at all while the test's own
+whitespace-folding reader matched it fine. Corrected — fold the document exactly
+as the test's reader does, then remove **every** occurrence — **all eight
+mutations (4 needles × 2 documents) fail the build, and the unmutated control
+passes.** This is the same hazard Stage F flagged (a check that passes for the
+wrong reason is indistinguishable from one that works), met from the other
+direction: a check that *fails* to fail because the harness, not the pin, was
+broken.
+
+### The credit ledger's final position
+
+**92,274 weighted credits, cumulative, across 7,962 metered requests** — 7,104
+`rpc` (7,104 credits), 851 `enhanced` (85,100), 7 `das` (70). Per stage:
+A/B 339 → C.1 4,220 → D 6,782 → E 67,606 → F 67,606 (unchanged) → **G 92,274**.
+Stage G's 24,668 is 4.9% of its own allowance and 2.6% of the vendor's remaining
+month; **907,726 of the operator-measured 1,000,000 monthly allowance is
+untouched**. Every request was priced before it was sent, and no refusal ever
+wrote a row.
+
+The cheapest way to summarise the stage: **the money was not the constraint, and
+the answers still came back negative.** That is worth stating, because Stage F
+recorded both questions as "priced out" — and a reader could reasonably have
+assumed a larger budget would have changed them. It would have changed one of
+them (the anchor pairs cost 22,401, which was always affordable at this
+allowance) and it would not have touched the other (4.7 million against a
+million a month).
+
+### Standing items after this stage
+
+1. ~~ADR-011 materiality~~ — **closed**, DISTINCT at 6 of 6 (ADR-016).
+2. ~~The decon-unbiased price~~ — **closed as measured-unaffordable at corrected
+   weights**, 4,695,489 (ADR-017). Reopens only on an affordable decontaminated
+   label — a live forward-recorded cohort that watches insider sells happen —
+   never on a better model.
+3. SPL `BURN` parse vocabulary gap (8 of 54,202 payloads). Refused correctly;
+   unchanged.
+4. The behavioural signal stays not shipped, with its confirmation bars now
+   registered in advance.
+5. Cohort enumeration before 2025-09 needs a keyed source or a wider archive
+   sweep. Untouched by this stage.
+6. Recorded for anyone joining against the parent's matrix: `behavior_c25.csv`
+   holds 422 rows where C.26's text says 447.
+
 ## Stage F — the project is complete — 2026-08-14
 
 **The project is closed.** Stage E answered the question it existed to reach

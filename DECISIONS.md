@@ -553,3 +553,79 @@ recorded as a correct refusal rather than patched under a closing commit. The
 cost of closing here is that the graduated-population question goes
 unanswered; the cost of not closing would have been shipping a second cohort
 as though it were a different answer.
+
+## ADR-016: The anchor-materiality ruling closes at 6 of 6 — the anchors are measured DISTINCT
+
+**Date:** 2026-08-22 · **Status:** accepted · closes the question ADR-011 left open; does not supersede ADR-011's decision
+
+**Context.** ADR-011 recorded a **withheld** formal decision: the Stage D
+registration demanded ≥ 4 of 6 both-anchor pairs and only 2 were affordable,
+the other four having priced 2,000 / 2,300 / 6,700 / 11,100 enhanced credits
+and been skipped by the sub-budget before any call. The bar was not bent, and
+the question stayed open with its price attached (Stage F standing item 1).
+Stage G bought those four pairs against a registered 500,000-credit stage
+allowance and applied the **Stage D Task 0 threshold verbatim** — no
+re-derivation, no adjustment — across all six.
+
+The measurement re-priced each pair from its freshly fetched windows before the
+first enhanced call, and the prices came back **identical to Stage D's**
+(2,000 / 2,300 / 6,700 / 11,100): historical windows are stable, which is a
+small known-answer result in its own right. Cost: **22,401 weighted** (300
+retrieval, 22,100 enhanced, 1 header probe).
+
+**Decision.** Coverage is **6 of 6 against a registered minimum of 4**, and the
+verdict is **DISTINCT**. Against the three registered criteria:
+
+- **(a) zero clearance flips** — passed, but *vacuously*: no pool was scorable
+  under either anchor. All six refuse on `creator_time_to_first_sell_s`
+  (measured absence at scorer level — the creator did not sell inside the
+  window; cf. ADR-012, which is a pipeline-level rule and does not apply to this
+  scorer-level harness). Refusal reasons matched `missing_features` to
+  `missing_features` on all six, so (a) passed without discriminating.
+- **(b) |Δ clearance_score| ≤ 0.01 on every scored pair** — vacuous: zero
+  scored pairs.
+- **(c) ≥ 90% of feature comparisons inside the Stage B tolerance bands** —
+  **failed at 43 of 60 (71.7%)**.
+
+**The verdict therefore rests entirely on criterion (c)**, and that is recorded
+plainly rather than presented as a three-way agreement. The failure is
+structured, not diffuse: the same window-derived fields fall out of band every
+time — `top5_concentration_wend` on **6 of 6**, `n_early_holders` on **6 of 6**,
+`creator_allocation_t0` on **5 of 6** — the identical trio Stage D reported on
+its two pairs, now confirmed on all six. Underneath all three sits one
+mechanism: the parse derived a **different creator under each anchor on 6 of 6
+pools**. A window opening at a different instant has a different first actor in
+it, and every creator-relative and holder-set feature moves with that.
+
+Window populations, all six pairs (parent-anchor vs pool-anchor signatures):
+1 / 4 / 135 / 221 / 693 / 1,123 against 83 / 1,466 / 1,515 / 1,843 / 6,529 /
+9,808. Two parent windows hold a single-digit count where the pool window holds
+thousands.
+
+**Consequences.** ADR-011's decision is **unchanged and now measured rather than
+precautionary**: the scanner anchors at pool creation, and holdout calibration
+is **not** represented as transferring to pool-creation windows. Live and
+retrospective scores continue to ship labelled **anchor-shifted** — and README.md
+and FINDINGS.md now say the shift is a measured fact at full registered
+coverage, with `tests/test_honesty.py` pinning that verdict and its 43-of-60
+margin in both documents, extended in the same commit as the text (the Stage F
+pattern). ADR-011's "until the materiality question closes on ≥ 4 pairs" escape
+clause is spent: it closed, and it closed against transfer. What could still
+supply calibration on the pool-creation anchor is a forward cohort's own
+realized outcomes — a different population, per ADR-015 — never a re-run of this
+comparison.
+
+Recorded as a limit of this ruling: criteria (a) and (b) were never exercised,
+because a both-anchor pair that *scores* under both anchors has still not been
+observed. A future cohort where the creator sells inside the window would test
+them. That does not weaken the DISTINCT verdict — 71.7% against a 90% bar is not
+a near miss — but it does mean the strongest possible form of the evidence, a
+measured clearance flip, is not among what was collected.
+
+Also measured in passing, closing an assertion in `gate.py` with evidence: a
+live Helius JSON-RPC response carries **no credit-, quota-, usage- or
+limit-bearing header of any kind** (`getHealth`, 200, headers: `alt-svc`,
+`cf-cache-status`, `cf-ray`, `connection`, `content-encoding`, `content-type`,
+`date`, `server`, `set-cookie`, `transfer-encoding`, `zid`). The gate's stated
+pricing method — derive cost from request counts against a weighted schedule,
+because the vendor exposes no usage figure — is confirmed rather than assumed.

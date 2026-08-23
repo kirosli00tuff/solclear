@@ -9,8 +9,9 @@ Five guarantees, each pinned independently:
 3. The documented precision/recall match what the persisted model actually
    produces on the committed holdout — a degraded or swapped model fails here.
 4. The snapshot the holdout rests on is byte-identical to its manifest.
-5. **The measured negatives stay in front** (Stage F): the Stage E outcome
-   result and the ADR-011 anchor-shift statement must both be present in
+5. **The measured negatives stay in front** (Stage F, extended in Stage G):
+   the Stage E outcome result, the ADR-011 anchor-shift statement, and the
+   Stage G anchor-materiality verdict that closed it must all be present in
    README.md AND FINDINGS.md. Those two results are what stop this tool being
    misread as a working trade filter, so a future reader — or a future session
    — must not be able to delete them quietly. Removing either breaks the build
@@ -71,6 +72,22 @@ ANCHOR_SHIFT_SENTENCES = (
     "anchor-shifted",
     "holdout calibration is not represented as transferring",
 )
+
+# Stage G (2026-08-22): the materiality ruling ADR-011 withheld at 2 of 6 pairs
+# closed at 6 of 6 against the same unaltered Stage D threshold, and closed
+# DISTINCT. That upgrade is pinned as its own claim rather than folded into the
+# sentences above, because the two say different things: the sentences above say
+# "we do not claim transfer", this says "we measured that the anchors differ".
+# Deleting the measurement would leave the caveat reading as a precaution again,
+# which is exactly the softening this file exists to prevent.
+ANCHOR_VERDICT_SENTENCES = (
+    "the anchors are measured DISTINCT",
+    "at full registered coverage",
+)
+# 43 of 60 feature comparisons in band against the registered >= 90%. The figure
+# is pinned beside the sentence because a verdict can survive while the margin
+# that produced it is quietly dropped.
+ANCHOR_VERDICT_FIGURES = ("43 of 60",)
 
 # Documents that must carry the negatives. CLAUDE.md is deliberately not in
 # this set: it pins the scope statement (guarantee 1), while these two are the
@@ -149,6 +166,22 @@ def test_anchor_shift_statement_survives_in_readme_and_findings() -> None:
     for doc in NEGATIVE_BEARING_DOCS:
         text = _text(doc)
         _assert_present(text, ANCHOR_SHIFT_SENTENCES, doc, "the ADR-011 anchor-shift statement")
+
+
+def test_anchor_materiality_verdict_survives_in_readme_and_findings() -> None:
+    """Stage G's closure of ADR-011 cannot be deleted without failing the build.
+
+    Stage D withheld the anchor-materiality ruling at 2 of 6 pairs rather than
+    bend its bar; Stage G bought the remaining four and the same unaltered rule
+    returned DISTINCT at 6 of 6, on 43 of 60 feature comparisons in band against
+    a registered 90% requirement. Both documents must carry the verdict and its
+    margin, so a later reader cannot mistake the anchor-shifted label for an
+    unresolved precaution — or, worse, drop it as one.
+    """
+    for doc in NEGATIVE_BEARING_DOCS:
+        text = _text(doc)
+        _assert_present(text, ANCHOR_VERDICT_SENTENCES, doc, "the Stage G anchor verdict")
+        _assert_present(text, ANCHOR_VERDICT_FIGURES, doc, "the Stage G anchor-verdict margin")
 
 
 def test_the_presence_check_fires() -> None:

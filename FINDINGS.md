@@ -4,7 +4,8 @@ These findings travel with this repository because they are its most useful
 output for anyone else working on rug detection or memecoin outcome studies.
 Each was measured against bars registered **before** the measurement existed —
 in MLCryptoEngine (stages C.19–C.26, 2026-08-06 → 2026-08-07, working in that
-project's `report.md`) or here (stages B–E, 2026-08-11 → 2026-08-14, working in
+project's `report.md`) or here (stages B–E, 2026-08-11 → 2026-08-14, and the
+Stage G post-closure confirmations of 2026-08-22, working in
 [progress.md](progress.md)).
 
 **Every claim below carries its sample size in the same sentence as its
@@ -19,7 +20,7 @@ question that rested on eight pools.
 | 1 | A cleared basket did not beat holding SOL; it went to zero | 18 cleared (30 d), 4 (90 d), from a 77-pool cohort |
 | 2 | Crawler-selected enumeration manufactures survivorship | 40 birth-ordered vs 16 attention-crawled |
 | 3 | The honest-vs-soft/slow-rug boundary is absent at T0+30min | 194 (2024 time-split fold) |
-| 4 | The training windows open *after* the launch storm | 10 mints (lag), 6 mints (window populations) |
+| 4 | The training windows open *after* the launch storm; the anchors are measured DISTINCT | 10 mints (lag), 6 of 6 both-anchor pairs |
 | 5 | The naive from-now walk excludes 57% of the honest class | 14 probed pools |
 | 6 | RugCheck's `rugged` flag returned False on documented rugs | 4 |
 | 7 | The post-launch behavioural lift is unconfirmed | 194 → 286 pools across three stages |
@@ -160,7 +161,7 @@ at T0+30min separates honest launches from soft or slow rugs, and that is a
 measured property of the feature space at that horizon, not a modeling gap to
 be closed with a better estimator.
 
-## 4. The training windows open *after* the launch storm, and the live anchor is a different instant (Stage D, 2026-08-13)
+## 4. The training windows open *after* the launch storm, and the live anchor is a measurably different instant (Stage D, 2026-08-13; ruling closed Stage G, 2026-08-22)
 
 Read from the parent project's own source rather than inferred — which is how
 an earlier hypothesis (ADR-007's token-launch guess) came to be refuted:
@@ -188,16 +189,35 @@ the same mints held 1,843 / 6,529 / 9,808 / 83 / 1,466 / 1,515.
 
 **Consequence, and it is the caveat on every live score this repository can
 produce.** The two anchors select different event sets on every pool compared.
-A formal materiality ruling was **withheld**: the registration demanded ≥ 4 of
-6 both-anchor pairs and only 2 were affordable (the other four priced
-2,000–11,100 enhanced credits and were skipped before any call, rather than
-adjusting the bar). Both measured pairs came in at **7 of 10 features in-band
-against a registered 90% requirement**, with the same window-derived trio out
-of band each time. The evidence points DISTINCT; the bar simply was not allowed
-to rule. Per ADR-011 the scanner anchors at pool creation and **holdout
+Stage D withheld the formal ruling at 2 of 6 pairs against a registered minimum
+of 4 — the other four priced 2,000–11,100 enhanced credits and were skipped
+before any call, rather than adjusting the bar.
+
+**Stage G (2026-08-22) bought those four pairs and the ruling closed:
+the anchors are measured DISTINCT, at full registered coverage.** The Stage D
+Task 0 threshold was applied verbatim, unadjusted, across all 6 pairs:
+**43 of 60 feature comparisons in band against a registered ≥ 90% requirement
+(71.7%)**, so criterion (c) fails and the rule returns DISTINCT. The failure is
+not diffuse — it is the same three window-derived fields every time:
+`top5_concentration_wend` out of band on **6 of 6**, `n_early_holders` on
+**6 of 6**, `creator_allocation_t0` on **5 of 6**. And the parse derived a
+**different creator under each anchor on 6 of 6 pools**, which is the mechanism
+underneath all three: a window opening at a different instant has a different
+first actor in it.
+
+Stated so the ruling is not over-read: criteria (a) *zero clearance flips* and
+(b) *|Δ score| ≤ 0.01* were **vacuous** here — no pool was scorable under
+*either* anchor (all 6 refuse on `creator_time_to_first_sell_s`, the creator not
+having sold inside a complete window), so both passed only by matching refusal
+reasons. **The DISTINCT verdict rests entirely on criterion (c).** That is the
+criterion written to catch exactly this, and 71.7% against 90% is not a near
+miss; but a reader is entitled to know the other two could not speak.
+
+Per ADR-011 and now ADR-016 the scanner anchors at pool creation and **holdout
 calibration is not represented as transferring** — live and retrospective
 scores ship labelled **anchor-shifted**, and a caller does not inherit the
-0.984 figure by running this against the chain.
+0.984 figure by running this against the chain. That label is now a measured
+fact, not a precaution.
 
 Two dead ends recorded so nobody re-walks them: DAS `getAsset` returns **no
 creation-time field** (10 credits/call, probed on 6 mints; the only time-like

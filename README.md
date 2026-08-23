@@ -52,10 +52,21 @@ pool-anchor windows on the same six mints).
 Therefore, per **ADR-011**: the scanner anchors at pool creation, and **holdout
 calibration is not represented as transferring** to pool-creation windows. A
 caller running this against the live chain **does not inherit the 0.984
-figure**. Live output is labelled *anchor-shifted*, and it stays that way until
-the materiality question closes on ≥ 4 both-anchor pairs (2 of 6 measured; the
-registered rule was withheld rather than bent) or a forward cohort supplies its
-own calibration. See [DECISIONS.md](DECISIONS.md) ADR-010 and ADR-011.
+figure**. Live output is labelled *anchor-shifted*.
+
+**Stage G closed this question rather than leaving it open: the anchors are
+measured DISTINCT, at full registered coverage.** Stage D could afford only 2
+of the 6 registered both-anchor pairs and withheld the ruling rather than bend
+the bar; Stage G bought the remaining four (22,100 enhanced credits, re-priced
+before sending and matching Stage D's prices exactly) and applied the same
+unaltered rule to all six. Only **43 of 60** feature comparisons landed inside
+the tolerance bands against a registered ≥ 90% requirement, so the rule returns
+DISTINCT — and it is the *same three window-derived fields* out of band every
+time (`top5_concentration_wend` 6/6, `n_early_holders` 6/6,
+`creator_allocation_t0` 5/6), with a **different derived creator under each
+anchor on all 6 of 6 pools**. The anchor-shifted label therefore stays, and it
+is now a measured fact rather than a precaution. See [DECISIONS.md](DECISIONS.md)
+ADR-010, ADR-011 and ADR-016.
 
 ### 2. On a birth-ordered launch cohort, every cleared pool went to zero
 

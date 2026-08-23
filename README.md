@@ -114,6 +114,15 @@ here, and it is [FINDINGS.md](FINDINGS.md) §2.
 | `solclear.pipeline` | The live path's refusal contract | Shipped, anchor-shifted output |
 | Post-launch behavioural signal | lift +0.032, 95% CI [−0.045, +0.109] | **Not shipped** — CI includes zero |
 
+The behavioural signal stays not shipped, and now has a measured reason it will
+stay that way. The one test that would confirm it — decontaminated labels on the
+depth-unbiased sample — was re-priced in Stage G at **4,695,489 weighted
+credits** (measured on 43 of 328 pools; 95% interval [1,908,852, 8,138,152])
+against a registered affordability threshold of 745,915: **NO-GO**. That is
+37.6× the 124,764 the parent project recorded, because its ledger priced
+enhanced calls 10× low *and* its cost model stratified on the wrong address's
+activity. See [FINDINGS.md](FINDINGS.md) §8.
+
 The API encodes the scope rather than only stating it. The entry point is named
 for *clearance*; it returns a `Clearance` carrying its calibration statement
 (never a bare number); no probability that reads as danger is exposed anywhere

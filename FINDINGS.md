@@ -24,7 +24,7 @@ question that rested on eight pools.
 | 5 | The naive from-now walk excludes 57% of the honest class | 14 probed pools |
 | 6 | RugCheck's `rugged` flag returned False on documented rugs | 4 |
 | 7 | The post-launch behavioural lift is unconfirmed | 194 → 286 pools across three stages |
-| 8 | The confirming measurement is priced out, not untested | 8 pools probed for the cheap route |
+| 8 | The confirming measurement is priced out, not untested — at 4,695,489, not 124,764 | 43 of 328 pools probed for the corrected price |
 
 > **Section numbering changed in Stage F** (this file was reorganised to lead
 > with the outcome study and the crawler-bias result). `DECISIONS.md` is
@@ -284,17 +284,60 @@ Honest reading: the behavioural signal is real in direction, consistent across
 three stages, small, and **unconfirmed**. It is **not shipped** in this package
 and must not be represented as a working discriminator.
 
-## 8. The measurement that would settle §7 is priced out, not untested (C.26)
+## 8. The measurement that would settle §7 is priced out, not untested — and the price was understated by 37.6× (C.26, re-priced Stage G 2026-08-22)
 
 The one measurement that would settle §7 — decontaminated labels on the
-depth-unbiased sample — was **priced at ≈ 124,764 weighted credits, roughly 2×
-the parent project's entire 60,000-credit cap**, dominated by 53 thriving pools
-at ~2,000 each (a single active pool needs ~7,970 for its 30-day insider-sell
-detail). The cheaper restructure — querying the creator address instead of the
-pool — was **blocked on identification rather than cost: 0 of 8 pools resolved
-a creator** from launch-window data, because the token mint generally predates
-the pool-activity T0.
+depth-unbiased sample — was **priced by the parent at ≈ 124,764 weighted
+credits, roughly 2× its entire 60,000-credit cap**, dominated by 53 thriving
+pools at ~2,000 each. The cheaper restructure — querying the creator address
+instead of the pool — was **blocked on identification rather than cost: 0 of 8
+pools resolved a creator** from launch-window data, because the token mint
+generally predates the pool-activity T0.
 
-Recorded as **measured-unaffordable, not untested**: the question has a price
-and the price was declined deliberately. It reopens on an affordable
-decontaminated label — a live forward-recorded cohort — not on a better model.
+**Stage G re-priced it and the number is far worse: 4,695,489 weighted credits,
+95% bootstrap interval [1,908,852, 8,138,152], measured on 43 of the 328 pools
+in the parent's committed honest class.** That is **37.6× the stale 124,764
+figure**, and only a quarter of the gap is the credit weight. Two errors
+compounded:
+
+1. **The weight was 10× low.** The parent's ledger priced `enhanced` at 10
+   credits per call against the vendor's published 100 (solclear corrected this
+   in Stage C, before its first enhanced call). Correcting only that puts the
+   parent's own plan at 1,247,640.
+2. **The cost model was built on the wrong address's activity, which is the
+   bigger error.** The parent stratified per-pool cost on the 6h transaction
+   count in `behavior_c25.csv` — measured by walking the **mint** — while the
+   decon test needs 30 days of detail on the **pool**. Measured over 43 pools,
+   the rank correlation between the two is **+0.038 (n = 43): none**. The
+   "thriving pools are the expensive ones" premise does not hold — the
+   high-activity tercile came in **cheapest** (mean 6,564 weighted) against the
+   low tercile's 13,581 — and one pool with **38,455 mint transactions in its
+   first 6 hours had zero pool-address signatures across the whole 30-day
+   horizon** (its address does carry history, newest signature 2026-05-14, so
+   this is an anchor/address mismatch of exactly the kind §4 measures, not a
+   resolution gap; it is included at its measured 0, which lowers the estimate).
+
+**The per-pool distribution, measured** (43 pools, 100 signatures per call at
+100 credits flat): median **700** weighted, mean **15,170**, p25 200, p75 9,100,
+p90 46,100, **max ≥ 150,000** — two pools hit the 150-page probe cap, so both
+their costs and the total are **floors**. The underlying 30-day pool-address
+signature counts run **0 to ≥ 150,000, median 661**. That shape is what makes
+this expensive: the median pool is nearly free and the mean is 21× the median,
+so the bill is set by a tail the parent's stratifier could not see.
+
+**Read against the Stage G registration: NO-GO.** The registered bar required
+the corrected total to sit under both the remaining stage allowance (475,332)
+and 80% of the vendor's remaining monthly balance (745,915). It exceeds the
+first by ~10× and the second by ~6×, and **even the bootstrap lower bound of
+1,908,852 exceeds them by 4.0× and 2.6×** — so the decision does not rest on the
+estimator's uncertainty. Recorded as
+**measured-unaffordable-at-corrected-weights at 4,695,489 weighted**, which
+replaces the 124,764 framing wherever it is cited.
+
+Unchanged: this is a **measured closure, not a gap**. The question has a price,
+the price is now measured rather than modelled, and it is declined
+deliberately. It reopens on an affordable decontaminated label — a live
+forward-recorded cohort that observes insider sells as they happen instead of
+buying 30 days of history per pool — not on a better model. The behavioural
+signal of §7 therefore stays **not shipped**, and the Stage G confirmation bars
+registered for it stand unexercised rather than quietly dropped.

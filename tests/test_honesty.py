@@ -10,9 +10,10 @@ Five guarantees, each pinned independently:
    produces on the committed holdout — a degraded or swapped model fails here.
 4. The snapshot the holdout rests on is byte-identical to its manifest.
 5. **The measured negatives stay in front** (Stage F, extended in Stage G):
-   the Stage E outcome result, the ADR-011 anchor-shift statement, and the
-   Stage G anchor-materiality verdict that closed it must all be present in
-   README.md AND FINDINGS.md. Those two results are what stop this tool being
+   the Stage E outcome result, the ADR-011 anchor-shift statement, the Stage G
+   anchor-materiality verdict that closed it, and the Stage G corrected price of
+   the confirmation that stays unbought must all be present in README.md AND
+   FINDINGS.md. Those two results are what stop this tool being
    misread as a working trade filter, so a future reader — or a future session
    — must not be able to delete them quietly. Removing either breaks the build
    exactly as a rug-detection-shaped name does.
@@ -88,6 +89,15 @@ ANCHOR_VERDICT_SENTENCES = (
 # is pinned beside the sentence because a verdict can survive while the margin
 # that produced it is quietly dropped.
 ANCHOR_VERDICT_FIGURES = ("43 of 60",)
+
+# Stage G (2026-08-22): the decon-unbiased confirmation the parent recorded as
+# measured-unaffordable at 124,764 weighted was re-priced at 4,695,489 — 37.6x,
+# because the parent's ledger priced enhanced calls 10x low AND its cost model
+# stratified on the wrong address's activity. The corrected number is pinned
+# because a stale, ten-times-cheap price is exactly the sort of figure a later
+# reader would act on: it makes an unaffordable confirmation look one budget
+# away. The behavioural signal's not-shipped status rests on it.
+DECON_REPRICE_FIGURES = ("4,695,489",)
 
 # Documents that must carry the negatives. CLAUDE.md is deliberately not in
 # this set: it pins the scope statement (guarantee 1), while these two are the
@@ -182,6 +192,20 @@ def test_anchor_materiality_verdict_survives_in_readme_and_findings() -> None:
         text = _text(doc)
         _assert_present(text, ANCHOR_VERDICT_SENTENCES, doc, "the Stage G anchor verdict")
         _assert_present(text, ANCHOR_VERDICT_FIGURES, doc, "the Stage G anchor-verdict margin")
+
+
+def test_decon_reprice_survives_in_readme_and_findings() -> None:
+    """The corrected price of confirming the behavioural signal cannot be dropped.
+
+    The parent published 124,764 weighted; measured under corrected weights and
+    against the pool address that actually incurs the cost, it is 4,695,489.
+    Both documents must carry the corrected figure, because the stale one reads
+    as "one modest budget away" and would invite a future session to spend
+    against a price that was never real.
+    """
+    for doc in NEGATIVE_BEARING_DOCS:
+        text = _text(doc)
+        _assert_present(text, DECON_REPRICE_FIGURES, doc, "the Stage G corrected decon price")
 
 
 def test_the_presence_check_fires() -> None:

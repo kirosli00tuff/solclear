@@ -629,3 +629,76 @@ limit-bearing header of any kind** (`getHealth`, 200, headers: `alt-svc`,
 `date`, `server`, `set-cookie`, `transfer-encoding`, `zid`). The gate's stated
 pricing method — derive cost from request counts against a weighted schedule,
 because the vendor exposes no usage figure — is confirmed rather than assumed.
+
+## ADR-017: The decon-unbiased test is measured-unaffordable at corrected weights — 4,695,489, not 124,764
+
+**Date:** 2026-08-22 · **Status:** accepted · re-prices parent ADR-054; the behavioural signal stays not shipped
+
+**Context.** The parent recorded the decontaminated-unbiased test —
+the one measurement that would turn its post-launch behavioural finding from
+suggestive into established — as **measured-unaffordable at ≈ 124,764 weighted**
+against a 60,000 cap (C.26 §2, parent ADR-054). Two things made that figure
+worth revisiting rather than inheriting: the parent's ledger priced `enhanced`
+at **10 credits per call** where the vendor publishes **100** (solclear
+corrected this in Stage C, commit `ad453f9`, before its first enhanced call),
+and the Helius account now carries a measured 1,000,000 credits per month
+against the parent's self-imposed 60,000. Stage G registered a 500,000 stage
+allowance and an affordability rule before pricing anything.
+
+**Decision.** The test is recorded as
+**measured-unaffordable-at-corrected-weights at 4,695,489 weighted credits**,
+95% bootstrap interval **[1,908,852, 8,138,152]**, and Task 3 does not run. The
+registered bar required the total to sit under both the remaining stage
+allowance (475,332) and 80% of the vendor's remaining monthly balance (745,915);
+it exceeds them by roughly 10× and 6×, and **even the interval's lower bound
+exceeds them by 4.0× and 2.6×**, so the verdict does not depend on the
+estimator's uncertainty.
+
+**How it was priced, because "measured" has to mean something.** The population
+is the honest class of the parent's committed `behavior_c25.csv` — **328 pools**
+— whose pool address and T0 resolved from the archived SolRPDS CSVs at **zero
+credits, 328 of 328**. The request plan per pool is enhanced detail over
+`(T0 + 1800 s, T0 + 30 d]` on the **pool** address, the horizon
+`decontaminate()` needs to see insider sells, at `ceil(signatures / 100) × 100`
+weighted plus Method B retrieval. **43 pools were probed and their 30-day
+signature counts measured, not extrapolated** (642 weighted for the registered
+twelve, 2,266 total including a declared extension; two pools hit the 150-page
+probe cap and are carried as floors). Measured per-pool cost: median **700**,
+mean **15,170**, p90 46,100, max ≥ 150,000.
+
+**Why the correction is 37.6× and not the 10× the weight change implies.** The
+weight was one error; the cost model was the larger one. The parent stratified
+per-pool cost on the 6h transaction count in `behavior_c25.csv`, which was
+measured by walking the **mint**, while the cost is incurred on the **pool**.
+Measured over 43 pools the rank correlation between the two is **+0.038 —
+none**. The consequences are visible directly: the high-activity tercile priced
+**cheapest** (mean 6,564) against the low tercile's 13,581, and one pool with
+38,455 mint transactions in its first six hours carried **zero** pool-address
+signatures across the entire 30-day horizon (its address does hold history, so
+this is an anchor/address mismatch of the kind ADR-016 measures, not a
+resolution gap). "53 thriving pools at ~2,000 each dominate" was a reasonable
+model of the wrong quantity.
+
+**A declared deviation, recorded rather than smoothed.** The registration fixed
+a 12-pool probe. That probe returned a point estimate of 5,108,814 with a
+bootstrap interval of [366,564, 13,252,764] — **straddling the threshold**, with
+~10% of draws below it. The probe was therefore extended to 43 pools **inside
+the registered 2,500-credit sub-budget, which was not exceeded**, with the
+original twelve draws left exactly as drawn and the extension sampling the
+remainder under its own seed. The registered affordability bar was not touched.
+The trigger for extending was a stated property of the *input* — an interval
+spanning the threshold — not which side of the threshold the point estimate
+fell on, and extending could have moved the answer either way. It moved it
+slightly down (5.11M → 4.70M) and made it decisive.
+
+**Consequences.** The behavioural signal's **not-shipped** status is unchanged,
+and the Stage G confirmation bars registered for it in the Task 0
+pre-registration **stand unexercised rather than being quietly dropped** — they
+are the bars any future attempt inherits, already fixed, so that attempt cannot
+choose them after seeing its number. FINDINGS §8 and README.md now carry
+4,695,489 in place of the 124,764 framing, pinned by `tests/test_honesty.py` in
+both documents. The reopening condition is unchanged in kind and sharper in
+detail: an **affordable decontaminated label**, meaning a live forward-recorded
+cohort that observes insider sells as they happen, rather than one that buys 30
+days of pool history per pool at a median of 700 and a mean of 15,170 weighted.
+Nothing here reopens on a better model, and nothing here changes ADR-015.

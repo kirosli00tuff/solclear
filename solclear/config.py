@@ -41,6 +41,14 @@ STAGE_D_CREDIT_CAP = 7_200
 # headroom. Never raised mid-run (ADR-003).
 STAGE_E_CREDIT_CAP = 600_000
 
+# Stage G (2026-08-22) post-closure confirmation cap, registered in
+# progress.md before any Stage G call. Total ledger cumulative — 67,606 spent
+# at registration, so the stage allowance is exactly 500,000 weighted. Read
+# against the vendor's measured 1,000,000/month allowance with 932,394
+# remaining in this cycle, so the self-imposed cap binds before the vendor's
+# does — which is the point of it. Never raised mid-run (ADR-003).
+STAGE_G_CREDIT_CAP = 567_606
+
 
 class MissingSecretError(RuntimeError):
     """A required secret is absent from the environment; names the variable."""

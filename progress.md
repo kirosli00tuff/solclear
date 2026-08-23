@@ -3,6 +3,267 @@
 *Newest stage first. Within a stage, the pre-registration precedes its results,
 because that is the order they were written in.*
 
+## Stage G — pre-registration: post-closure confirmations, the anchor verdict and the decon re-price — 2026-08-22
+
+*Committed before any Stage G measurement and before any live call. Disclosure,
+as always: the whole repository, the Stage D record, ADR-011, the Stage F
+closure, and the parent's C.23–C.26 sections were read before writing this. The
+bars below are set against measurements not yet taken: the four skipped
+both-anchor pairs are unmeasured, the decon request plan is unpriced under
+corrected weights, and no Stage G request has been sent.*
+
+**Why the closed artifact reopens, and how narrowly.** ADR-015 closed this
+project and named the one thing that would reopen the *outcome* question — a
+different population. This stage does not touch that. It closes two items ADR-015
+explicitly left standing **because they were priced out, not because they were
+answered**, and both are now plausibly affordable against a measured
+1,000,000-credit monthly allowance:
+
+1. the anchor-materiality ruling Stage D **withheld** at 2 of 6 pairs against a
+   registered minimum of 4 (ADR-011, standing item 1);
+2. the decon-unbiased confirmation the parent recorded as
+   **measured-unaffordable** at 124,764 weighted against a 60,000 cap (FINDINGS
+   §8, parent ADR-054).
+
+Neither is a new capability, a new model, or a new cohort. Both are
+confirmations of already-registered questions against already-registered bars.
+The stage re-closes the artifact when they are answered, whichever way they go.
+
+### The vendor's position, reported before the cap is set
+
+Helius exposes no usage endpoint reachable without a key, so this is **derived
+from the append-only ledger against an operator-measured allowance, not read
+from a vendor API** — the same honesty ADR-003 requires of every credit figure
+here.
+
+- **Operator-measured allowance: 1,000,000 weighted credits per month**, with
+  nothing else drawing on the account.
+- **Ledger spend to date: 67,606 weighted across 5,173 requests**, every row
+  timestamped inside 2026-08 (2026-08-11 → 2026-08-14).
+- **Remaining this cycle: 932,394** on the conservative reading — a calendar
+  month cycle with no reset since 2026-08-14. If the billing cycle has already
+  rolled the figure is up to 1,000,000. **Every affordability test in this stage
+  uses 932,394**, because assuming the larger number would be assuming a reset
+  nobody measured.
+- Registered as a free by-product: the first live response of Task 1 has its
+  **headers inspected for any vendor-published credit or quota field**, and
+  whatever is found — including nothing — is reported. `gate.py` asserts that no
+  such endpoint exists; that assertion gets evidence or gets corrected.
+
+### Stage cap
+
+- **Stage cap: 567,606 weighted credits total ledger cumulative**
+  (`STAGE_G_CREDIT_CAP`) — opening position 67,606, so the **stage allowance is
+  exactly 500,000**. Every request priced before sending; a refusal writes
+  nothing (ADR-003). The cap is self-imposed and binds well before the vendor's
+  932,394 does, which is the point of it. It is not raised mid-stage.
+- **Sub-budgets.** Task 1 ≤ **25,000** (the four skipped pairs were priced
+  2,000 / 2,300 / 6,700 / 11,100 enhanced in Stage D = 22,100, plus ≤ 400
+  retrieval for eight windows and slack; every pair re-priced before its first
+  call and skipped, not truncated, if it no longer fits). Task 2 probe ≤
+  **2,500**. Task 3 is budgeted only if Task 2 returns GO, and then only inside
+  whatever the stage allowance still holds.
+
+### Task 1 — the anchor verdict procedure, quoted rather than re-derived
+
+The thresholds are **Stage D Task 0's, verbatim**, applied unchanged across all
+six pairs once the four skipped ones are measured. No re-derivation, no
+adjustment, no new tolerance:
+
+> The two anchors are **INTERCHANGEABLE** iff, across every pool compared
+> under both anchors: (a) **zero clearance flips** — the `cleared` boolean
+> identical wherever both anchors score, and a refusal under one anchor
+> matching a refusal with the same reason under the other; (b) |Δ
+> clearance_score| ≤ 0.01 on every scored pair; and (c) ≥ 90% of individual
+> feature comparisons inside the Stage B tolerance bands
+> (`authority_revoked_in_window` exact; counts ± 1; shares ± 0.01 absolute;
+> TTFS ± 60 s). Otherwise they are **DISTINCT**, the scanner must anchor at
+> token launch, and Task 2's cost becomes a hard input to scanner economics.
+> **Minimum decision coverage: ≥ 4 of the 6 pre-registered pools compared
+> under both anchors** — below that the stage reports insufficient coverage
+> rather than deciding. The threshold is not adjusted after the measurement.
+
+One clause of that quotation is already superseded and is flagged here rather
+than silently edited: *"the scanner must anchor at token launch"* was overtaken
+by ADR-010 (no affordable token-launch T0 source exists, and none is needed) and
+ADR-011 (the scanner anchors at pool creation). **The decision rule (a)/(b)/(c)
+and the coverage minimum are untouched** — only that consequence clause no
+longer describes what a DISTINCT verdict implies. What DISTINCT now implies is
+recorded below.
+
+**What each verdict does, decided now:**
+
+- **INTERCHANGEABLE** — the anchor-shifted labelling is retired. README.md and
+  FINDINGS.md drop the anchor-shift caveat, ADR-011 is superseded by a Stage G
+  ADR, and the honesty-test pin on the anchor-shift sentences is removed **in
+  the same commit as the text**, deliberately, per the Stage F pattern.
+- **DISTINCT** — the anchor-shifted labelling stays and stops being a
+  precaution. README.md and FINDINGS.md are edited to say the shift is a
+  **measured fact at full registered coverage**, not a withheld ruling, and the
+  honesty pins are extended to the new sentence in the same commit. ADR-011
+  moves from *withheld-with-evidence* to *measured*.
+- **INSUFFICIENT COVERAGE** (fewer than 4 of 6 pairs actually complete, e.g. a
+  gate refusal or an unreachable window) — the withheld status stands exactly as
+  it is, and the stage reports which pairs failed and why.
+
+### Task 2 — the decon re-price, and the affordability rule
+
+**What is being corrected.** The parent priced the decon-unbiased test at
+**124,764 weighted** under a ledger that carried `enhanced` at **10 credits per
+call**. solclear corrected that weight to the vendor's published **100 credits
+per call** in Stage C (commit `ad453f9`, before the first enhanced call this
+repository ever made). The *request plan* is unchanged by the correction — same
+pools, same 100-signature batch semantics, same 30-day insider-sell horizon —
+only the price per call moves, so the arithmetic floor of the correction is
+**×10**.
+
+**Method: measure, then multiply** — the Stage B addendum pattern, not a
+re-assertion of the parent's estimate.
+
+- **Population: the parent's committed decon pool list** — the honest class of
+  `data/processed/detection/behavior_c25.csv` in MLCryptoEngine, read-only. Its
+  composition is reported as measured, and any divergence from the counts the
+  parent's report states is reported as a finding rather than reconciled away.
+- **Per-pool request plan**: enhanced detail over `(T0 + 1800 s, T0 + 30 d]` on
+  the **pool** address — the horizon `decontaminate()` needs to see insider
+  sells (`SLOW_RUG_HORIZON_S = 30 * 86_400`) — at
+  `ceil(signatures / 100) × 100` weighted credits, plus Method B retrieval at
+  the measured ~33–38 per pool.
+- **The probe: 12 pools, four from each tercile of the committed 6h transaction
+  count**, sub-budget 2,500 weighted, pool address and T0 resolved at **zero
+  credits** from the read-only SolRPDS archive in the parent repository. Each
+  probe pool's 30-day signature count is *measured*, not extrapolated; the
+  stratum means then multiply out to the full population.
+- **Reported**: the corrected total, the per-pool distribution — typical and
+  extreme — the way Stage B reported retrieval, and the residual uncertainty of
+  the multiply-out stated as an interval, not hidden in a point estimate.
+
+**The affordability rule, fixed before the number exists.** GO iff the corrected
+total (enhanced + retrieval) is **≤ the stage allowance still remaining at that
+moment** *and* **≤ 80% of the vendor's 932,394 remaining monthly balance** —
+leaving a fifth of the cycle's credits unspent is a floor on caution, not a
+target to spend to. Otherwise **NO-GO**, recorded in FINDINGS.md as
+**measured-unaffordable-at-corrected-weights with the number**, replacing the
+stale 124,764 framing, and **the stage ends at Task 2 as a valid outcome**. A
+no-go is not a failure of this stage; it is the answer.
+
+### Task 3 — the decon confirmation bars, registered unconditionally
+
+Registered now, in full, whether or not Task 2 ever lets Task 3 run — so that
+nothing below can be chosen after a number is seen.
+
+**The quantity under confirmation.** The post-launch behavioural lift in the
+**6h mid-activity stratum**: **+0.032, SE 0.039, 95% CI [−0.045, +0.109]**. One
+provenance correction, stated so the citation is right: that figure is
+**C.26's firmed estimate** (n = 103 in the mid stratum, 166 unbiased pools
+added), which *superseded* C.25's +0.051 (n = 84); it is the last value the
+parent published and the one this stage confirms. It was measured on **v0**
+labels because decontaminated labels did not fit the parent's budget — which is
+precisely the gap this task closes.
+
+**The estimator and the strata are the parent's, not new ones.**
+
+- Features: `research/detection/behavior.py::behavioral_features` at cutoff
+  **T0+6h** — `n_tx`, `tx_per_min`, `rate_decay`, `unique_active_minutes`,
+  `max_gap_s`, `time_since_last_at_cutoff_s`, `err_fraction` — every value read
+  strictly before the cutoff, with `cutoff_end` refusing any pool whose label
+  event lands at or before it (survivor conditioning enforced, never clamped).
+- Labels: `research/detection/history.py::decontaminate` unchanged — insider set
+  = creator plus wallets whose first inbound funding came from the creator;
+  **≥ 70%** of window-end insider holdings sold within **72 h** is `soft_rug`,
+  within **30 d** is `slow_rug`, otherwise `honest_candidate`.
+- Model and split: LightGBM, **no hyperparameter search**, train ≤ 2023 / test
+  2024-Jan–Nov.
+- Metric: decontaminated honest-class **precision at the max-precision point
+  subject to recall ≥ 0.50**; **lift = precision − the stratum's base rate**.
+  Never accuracy.
+- Strata: the test fold split by **6h transaction count into terciles**, the
+  parent's registered decomposition. **Mid** is the middle tercile and is the
+  only stratum the bar reads; low and high are reported for continuity.
+- **Interval construction, registered:** 95% normal approximation on the stratum
+  precision, `SE = sqrt(p̂(1 − p̂) / n_mid)`, carried to the lift by treating the
+  stratum base rate as fixed — `lift ± 1.96 · SE`. This is the construction that
+  reproduces the parent's published [−0.045, +0.109] from +0.032 and SE 0.039,
+  and it is not changed afterwards.
+- **Answerable-cell floor: 30** decontaminated honest pools in the mid stratum's
+  2024 test fold, the parent's floor, unchanged. Below it the cell is
+  **unanswerable** and no precision figure is reported for it.
+
+**The two outcomes, defined before the run:**
+
+- **CONFIRMS INDISTINGUISHABLE FROM ZERO** — the decon mid-stratum lift's 95%
+  interval **includes zero**. FINDINGS §7 changes from *unconfirmed* to
+  *confirmed indistinguishable from zero under decontaminated labels*, with the
+  n. The signal stays **not shipped**.
+- **ESTABLISHES A REAL LIFT** — **all three** of: (i) the 95% interval's **lower
+  bound > 0.02**, the parent's noise floor carried unchanged; (ii) precision
+  **≥ 0.60 at recall ≥ 0.50**, the parent's honest bar carried unchanged; (iii)
+  **≥ 30** decon-honest in the mid stratum. Any weaker combination — including
+  an interval that excludes zero but whose lower bound sits at or below 0.02 —
+  is recorded as **directionally positive, below the registered noise floor**,
+  and is *not* a real lift.
+
+**The not-shipped rule, registered so it cannot be decided afterwards.** The
+behavioural signal's **not-shipped** status changes **only** on ESTABLISHES A
+REAL LIFT, and even then the change is exactly this: FINDINGS §7 and README
+record the signal as **confirmed and shippable**, and shipping itself is
+deferred to a separate registered stage, because packaging a discriminator is a
+build and this stage is a confirmation. **Every other outcome leaves "not
+shipped" untouched** — no partial upgrade, no "promising", no softening of the
+README line.
+
+**The anchor branches, both stated in advance.**
+
+- If Task 1 returns **INTERCHANGEABLE**, the confirmation runs on the parent's
+  own anchor (SolRPDS first-recorded activity with the 60 s pre-roll) and is
+  reported as an **exact replication** of the C.25/C.26 decon-unbiased test.
+- If Task 1 returns **DISTINCT**, the confirmation runs on **pool-creation
+  anchoring per ADR-011** and is reported as **a confirmation under the
+  corrected anchor, not an exact replication of C.25**. Registered comparability
+  language, fixed now: *the two anchors select different event sets on every
+  pool compared, so a decon lift measured on pool-creation windows measures the
+  same construct on the anchor a scanner can actually observe, and its point
+  estimate is not a like-for-like replacement for +0.032.* A DISTINCT verdict
+  does not change any bar above; it changes only what the result may be called.
+- If Task 1 returns **INSUFFICIENT COVERAGE**, the parent anchor is used and the
+  result inherits ADR-011's open caveat verbatim.
+
+**Refusals (Task 3), and when the population is too reduced to estimate on.**
+Refusals are honoured and reported **per class** — `retrieval_incomplete`,
+`parse_incomplete`, gate-priced skips, and pools whose label event precedes the
+cutoff (excluded by survivor conditioning, which is a design exclusion, not a
+refusal). **If more than 20% of the registered decon population is unavailable
+for any reason, the result is reported as measured on a materially reduced
+population**, with the reduction and its composition stated in the same sentence
+as the estimate — never silently estimated on the remainder.
+
+### Trial accounting
+
+**This stage adds one confirmation of one already-reported quantity, judged
+against one registered bar.** Nothing here is a search. Specifically: no
+additional observation cutoffs, no additional strata, no threshold retuning, no
+alternative estimator, no second label scheme, and no re-reading of the anchor
+thresholds. Task 1 reads six pairs against one rule fixed in Stage D; Task 3, if
+it runs, reads one number against one bar fixed above. No multiplicity
+correction is owed because no multiplicity is created, and this paragraph exists
+so that claim is checkable rather than asserted at the end.
+
+### Standing constraints
+
+MLCryptoEngine is **read-only** for the whole stage; solattn is not touched. The
+scope statement and every honesty pin hold — any sentence those tests assert
+changes only together with its test, deliberately, in the same commit (the
+Stage F pattern). The behavioural signal stays not shipped unless the rule above
+fires. ADR-015's reopening condition for the *outcome* question is untouched by
+this stage: it still requires a different population, not a different model.
+
+### ETAs
+
+T0 ~40 m, T1 ~70 m, T2 ~60 m, T3 ~3–4 h **only on a GO**, T4 ~75 m — so ≈ 4 h
+on a no-go at Task 2, ≈ 8 h if the confirmation runs. Baseline: Stage F's
+estimates held; Stage D's Task 4 overran ~90 m against ~40 m on enumeration
+dead-ends, which is the failure mode to watch here too.
+
 ## Stage F — the project is complete — 2026-08-14
 
 **The project is closed.** Stage E answered the question it existed to reach
